@@ -1,7 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import { format } from 'date-fns';
 import { Link } from 'expo-router';
-import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { plantEventsService } from '../services/plantEventsService';
 import { Plant } from '../types/plant';
 
 interface PlantCardProps {
@@ -11,6 +14,61 @@ interface PlantCardProps {
   onArchive?: (plantId: string) => void;
   onUnarchive?: (plantId: string) => void;
 }
+
+// Компонент для отображения ближайшего события
+const NextEvent: React.FC<{ plantId: string }> = ({ plantId }) => {
+  const [nextEvent, setNextEvent] = useState<any>(null);
+
+  useEffect(() => {
+    const event = plantEventsService.getNextEvent(plantId);
+    setNextEvent(event);
+  }, [plantId]);
+
+  if (!nextEvent) return null;
+
+  const getEventIcon = (type: string) => {
+    switch (type) {
+      case 'watering': return '💧';
+      case 'feeding': return '🌱';
+      case 'pruning': return '✂️';
+      case 'transplant': return '🔄';
+      case 'harvest': return '📦';
+      default: return '📅';
+    }
+  };
+
+  return (
+    <View style={styles.nextEvent}>
+      <Text style={styles.nextEventIcon}>{getEventIcon(nextEvent.type)}</Text>
+      <Text style={styles.nextEventText}>
+        {format(new Date(nextEvent.date), 'dd.MM')} - {nextEvent.title}
+      </Text>
+    </View>
+  );
+};
+
+// Компонент для отображения графика полива
+const WateringInfo: React.FC<{ schedule: string }> = ({ schedule }) => {
+  const getScheduleText = (schedule: string) => {
+    const texts = {
+      daily: 'Ежедневно',
+      '2days': 'Каждые 2 дня',
+      '3days': 'Каждые 3 дня',
+      '4days': 'Каждые 4 дня',
+      '5days': 'Каждые 5 дней',
+      '6days': 'Каждые 6 дней',
+      '7days': 'Раз в неделю',
+    };
+    return texts[schedule as keyof typeof texts] || schedule;
+  };
+
+  return (
+    <View style={styles.wateringInfo}>
+      <Ionicons name="water" size={12} color="#007AFF" />
+      <Text style={styles.wateringText}>{getScheduleText(schedule)}</Text>
+    </View>
+  );
+};
 
 export const PlantCard: React.FC<PlantCardProps> = ({ 
   plant, 
@@ -41,10 +99,15 @@ export const PlantCard: React.FC<PlantCardProps> = ({
     }
   };
 
+  const handleRatingPress = () => {
+    // Здесь будет навигация на страницу рейтинга
+    Alert.alert('Рейтинг', 'Функция рейтинга будет реализована в следующем обновлении');
+  };
+
   return (
     <View style={styles.card}>
       <Link href={`/plant/${plant.id}`} asChild>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.content}>
           {/* Заголовок с фото и названием */}
           <View style={styles.header}>
             {plant.avatarPhoto ? (
@@ -56,8 +119,29 @@ export const PlantCard: React.FC<PlantCardProps> = ({
             )}
             <View style={styles.headerInfo}>
               <Text style={styles.name}>{plant.name}</Text>
-              <Text style={styles.species}>{plant.species}</Text>
+              
+              {/* Ближайшее событие вместо вида */}
+              <NextEvent plantId={plant.id} />
+              
+              {/* График полива */}
+              <WateringInfo schedule={plant.wateringSchedule} />
             </View>
+          </View>
+
+          {/* Дополнительная информация */}
+          <View style={styles.additionalInfo}>
+            {plant.seedBank && (
+              <View style={styles.infoRow}>
+                <Ionicons name="business" size={12} color="#666" />
+                <Text style={styles.infoText}>{plant.seedBank}</Text>
+              </View>
+            )}
+            {plant.price && (
+              <View style={styles.infoRow}>
+                <Ionicons name="pricetag" size={12} color="#666" />
+                <Text style={styles.infoText}>{plant.price} руб</Text>
+              </View>
+            )}
           </View>
 
           {/* Информация о прогрессе */}
@@ -101,6 +185,15 @@ export const PlantCard: React.FC<PlantCardProps> = ({
         </TouchableOpacity>
       </Link>
 
+      {/* Кнопка рейтинга */}
+      <TouchableOpacity 
+        style={styles.ratingButton}
+        onPress={handleRatingPress}
+      >
+        <Ionicons name="star" size={16} color="#FFD700" />
+        <Text style={styles.ratingText}>Оценить</Text>
+      </TouchableOpacity>
+
       {/* Кнопки действий */}
       <View style={styles.actions}>
         {onDelete && (
@@ -137,43 +230,81 @@ export const PlantCard: React.FC<PlantCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
+    position: 'relative',
+  },
+  content: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
   },
   avatarPlaceholder: {
     backgroundColor: '#F2F2F7',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E5E5EA',
   },
   headerInfo: {
     flex: 1,
   },
   name: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 2,
+    marginBottom: 6,
   },
-  species: {
+  nextEvent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  nextEventIcon: {
     fontSize: 14,
+    marginRight: 6,
+  },
+  nextEventText: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  wateringInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  wateringText: {
+    fontSize: 12,
     color: '#666',
+    marginLeft: 4,
+  },
+  additionalInfo: {
+    marginBottom: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  infoText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 6,
   },
   progressSection: {
     marginBottom: 12,
@@ -193,14 +324,14 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   progressBar: {
-    height: 6,
+    height: 8,
     backgroundColor: '#F2F2F7',
-    borderRadius: 3,
+    borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 4,
   },
   stageBadge: {
     flexDirection: 'row',
@@ -229,6 +360,25 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 2,
   },
+  ratingButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9C4',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FFEB3B',
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#F57C00',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -240,5 +390,7 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     marginLeft: 12,
+    borderRadius: 8,
+    backgroundColor: '#F8F9FA',
   },
 });

@@ -19,11 +19,15 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { addPlantAtom } from '../../atoms/plantsAtom';
 import { CameraButton } from '../../components/CameraButton';
 import { DateTimePicker } from '../../components/DateTimePicker';
+import { WateringSchedulePicker } from '../../components/WateringSchedulePicker';
 import { fileStorage } from '../../services/fileStorage';
-import { PlantFormData, PlantStage } from '../../types/plant';
+import { PlantFormData, PlantStage, WateringSchedule } from '../../types/plant';
 
 interface ExtendedPlantFormData extends PlantFormData {
   avatarPhoto?: string;
+  seedBank?: string;
+  price?: string;
+  wateringSchedule: WateringSchedule;
 }
 
 export default function AddScreen() {
@@ -33,7 +37,10 @@ export default function AddScreen() {
   const [formData, setFormData] = useState<ExtendedPlantFormData>({
     name: '',
     species: '',
+    seedBank: '',
+    price: '',
     expectedDays: '',
+    wateringSchedule: '7days',
     stage: 'прорастание',
     plantingDate: new Date().toISOString(),
     photos: [],
@@ -89,16 +96,17 @@ export default function AddScreen() {
   };
 
   const handleCancel = () => {
-    // Удаляем все загруженные фото
     formData.photos.forEach(photoUri => {
       fileStorage.deletePhoto(photoUri).catch(console.error);
     });
     
-    // Полностью сбрасываем форму
     setFormData({
       name: '',
       species: '',
+      seedBank: '',
+      price: '',
       expectedDays: '',
+      wateringSchedule: '7days',
       stage: 'прорастание',
       plantingDate: new Date().toISOString(),
       photos: [],
@@ -123,24 +131,16 @@ export default function AddScreen() {
       await addPlant({
         name: formData.name.trim(),
         species: formData.species.trim(),
+        seedBank: formData.seedBank?.trim(),
+        price: formData.price ? Number(formData.price) : undefined,
         expectedDays: Number(formData.expectedDays),
+        wateringSchedule: formData.wateringSchedule,
         stage: formData.stage,
         plantingDate: formData.plantingDate,
         notes: formData.notes?.trim() || undefined,
         photos: formData.photos,
         avatarPhoto: formData.avatarPhoto,
         isArchived: false,
-      });
-
-      // Очищаем форму после успешного добавления
-      setFormData({
-        name: '',
-        species: '',
-        expectedDays: '',
-        stage: 'прорастание',
-        plantingDate: new Date().toISOString(),
-        photos: [],
-        notes: '',
       });
 
       Alert.alert('Успех', 'Растение успешно добавлено!', [
@@ -186,6 +186,23 @@ export default function AddScreen() {
             placeholder="Например, Томат"
           />
 
+          <Text style={styles.label}>Сидбанк</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.seedBank}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, seedBank: text }))}
+            placeholder="Например, Dutch Passion"
+          />
+
+          <Text style={styles.label}>Цена (руб)</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.price}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, price: text }))}
+            placeholder="Например, 500"
+            keyboardType="numeric"
+          />
+
           <Text style={styles.label}>Заявленный срок (дни) *</Text>
           <TextInput
             style={styles.input}
@@ -195,28 +212,31 @@ export default function AddScreen() {
             keyboardType="numeric"
           />
 
+          <WateringSchedulePicker
+            value={formData.wateringSchedule}
+            onChange={(schedule) => setFormData(prev => ({ ...prev, wateringSchedule: schedule }))}
+          />
+
           <Text style={styles.label}>Стадия *</Text>
-          <View style={styles.dropdownWrapper}>
-            <DropDownPicker
-              open={isStageDropdownOpen}
-              value={formData.stage}
-              items={stageOptions}
-              setOpen={setIsStageDropdownOpen}
-              setValue={(callback) => {
-                const newValue = typeof callback === 'function' 
-                  ? callback(formData.stage) 
-                  : callback;
-                setFormData(prev => ({ 
-                  ...prev, 
-                  stage: newValue as PlantStage 
-                }));
-              }}
-              style={styles.dropdown}
-              dropDownContainerStyle={styles.dropdownContainer}
-              placeholder="Выберите стадию"
-              listMode="SCROLLVIEW"
-            />
-          </View>
+          <DropDownPicker
+            open={isStageDropdownOpen}
+            value={formData.stage}
+            items={stageOptions}
+            setOpen={setIsStageDropdownOpen}
+            setValue={(callback) => {
+              const newValue = typeof callback === 'function' 
+                ? callback(formData.stage) 
+                : callback;
+              setFormData(prev => ({ 
+                ...prev, 
+                stage: newValue as PlantStage 
+              }));
+            }}
+            style={styles.dropdown}
+            dropDownContainerStyle={styles.dropdownContainer}
+            placeholder="Выберите стадию"
+            listMode="SCROLLVIEW"
+          />
 
           <DateTimePicker
             label="Дата посадки *"
@@ -354,14 +374,11 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: 'top',
   },
-  dropdownWrapper: {
-    marginBottom: 16,
-    zIndex: 1000,
-  },
   dropdown: {
     backgroundColor: '#F8F9FA',
     borderColor: '#E9ECEF',
     borderRadius: 8,
+    marginBottom: 16,
   },
   dropdownContainer: {
     backgroundColor: '#F8F9FA',
