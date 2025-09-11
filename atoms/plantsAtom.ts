@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import { fileStorage } from '../services/fileStorage';
+import { plantEventsService } from '../services/plantEventsService';
 import { Plant, PlantStage } from '../types/plant';
 
 // Атом для списка растений
@@ -55,10 +56,14 @@ export const updatePlantAtom = atom(
 );
 
 // Атом для удаления растения
+// В атом deletePlantAtom добавляем удаление событий:
 export const deletePlantAtom = atom(
   null,
   async (get, set, plantId: string) => {
     try {
+      // Удаляем события растения перед удалением самого растения
+      await plantEventsService.deletePlantEvents(plantId);
+      
       const success = await fileStorage.deletePlant(plantId);
       if (success) {
         const currentPlants = get(plantsAtom);

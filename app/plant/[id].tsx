@@ -3,19 +3,20 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { archivePlantAtom, plantsAtom, updatePlantStageAtom } from '../../atoms/plantsAtom';
 import { StageToggle } from '../../components/StageToggle';
-import { PlantStage } from '../../types/plant';
+import { plantEventsService } from '../../services/plantEventsService';
+import { PlantStage, WateringSchedule } from '../../types/plant';
 
 export default function PlantDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -72,6 +73,21 @@ export default function PlantDetailScreen() {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  // Добавляем функцию для обновления графика полива
+  const handleWateringScheduleUpdate = async (newSchedule: WateringSchedule) => {
+    try {
+      await plantEventsService.updateWateringSchedule(
+        plant.id,
+        newSchedule,
+        plant.plantingDate
+      );
+      Alert.alert('Успех', 'График полива обновлен');
+    } catch (error) {
+      Alert.alert('Ошибка', 'Не удалось обновить график полива');
+      console.error('Error updating watering schedule:', error);
+    }
   };
 
   return (

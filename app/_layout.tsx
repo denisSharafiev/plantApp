@@ -1,10 +1,16 @@
 import { Stack } from 'expo-router';
 import { Provider } from 'jotai';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { plantEventsService } from '../services/plantEventsService';
 
 export default function RootLayout() {
   const insets = useSafeAreaInsets();
+  useEffect(() => {
+    // Инициализируем сервис событий при запуске приложения
+    plantEventsService.initialize().catch(console.error);
+  }, []);
+
   return (
     <SafeAreaProvider>
       <Provider>
@@ -14,18 +20,9 @@ export default function RootLayout() {
           paddingTop: insets.top,
           paddingBottom: insets.bottom,
         }}}>
-          <Stack.Screen 
-            name="index" 
-            options={{ headerShown: false }} 
-          />
-          <Stack.Screen 
-            name="tabs" 
-            options={{ headerShown: false }} 
-          />
-          <Stack.Screen 
-            name="plant/[id]" 
-            options={{ headerShown: false }} 
-          />
+          <Stack.Screen name="index" />
+          <Stack.Screen name="tabs" />
+          <Stack.Screen name="plant/[id]" />
         </Stack>
       </Provider>
     </SafeAreaProvider>

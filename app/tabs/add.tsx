@@ -21,6 +21,7 @@ import { CameraButton } from '../../components/CameraButton';
 import { DateTimePicker } from '../../components/DateTimePicker';
 import { WateringSchedulePicker } from '../../components/WateringSchedulePicker';
 import { fileStorage } from '../../services/fileStorage';
+import { plantEventsService } from '../../services/plantEventsService';
 import { PlantFormData, PlantStage, WateringSchedule } from '../../types/plant';
 
 interface ExtendedPlantFormData extends PlantFormData {
@@ -114,6 +115,7 @@ export default function AddScreen() {
     });
   };
 
+  // В функцию handleSubmit добавляем создание событий полива после добавления растения:
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.species.trim() || !formData.expectedDays.trim()) {
       Alert.alert('Ошибка', 'Пожалуйста, заполните обязательные поля');
@@ -128,7 +130,7 @@ export default function AddScreen() {
     setLoading(true);
 
     try {
-      await addPlant({
+      const newPlant = await addPlant({
         name: formData.name.trim(),
         species: formData.species.trim(),
         seedBank: formData.seedBank?.trim(),
@@ -142,6 +144,9 @@ export default function AddScreen() {
         avatarPhoto: formData.avatarPhoto,
         isArchived: false,
       });
+
+      // Создаем события полива для нового растения
+      await plantEventsService.createWateringEventsForNewPlant(newPlant);
 
       Alert.alert('Успех', 'Растение успешно добавлено!', [
         {
