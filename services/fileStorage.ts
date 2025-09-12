@@ -103,6 +103,7 @@ class FileStorage {
     }
   }
 
+  // Метод updatePlant уже должен поддерживать любые поля растения
   async updatePlant(id: string, updates: Partial<Plant>): Promise<Plant | null> {
     try {
       const plants = await this.getPlants();

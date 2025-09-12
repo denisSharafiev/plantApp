@@ -22,7 +22,7 @@ export interface Plant {
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
-  ratings?: PlantRatings;
+  ratings?: PlantRatings; // Добавляем рейтинги
 }
 
 export interface PlantFormData {
@@ -36,13 +36,13 @@ export interface PlantFormData {
 }
 
 export interface PlantRatings {
-  germinationSpeed: number; // скорость пророста
-  maintenance: number;      // прихотливость
-  aroma: number;           // аромат
-  flowerCount: number;     // количество соцветий
-  flowerVolume: number;    // объём соцветий
-  vegSpeed: number;        // скорость веги
-  bloomSpeed: number;      // скорость цветения
-  totalYield: number;      // общий урожай
-  overallRating: number;   // общий рейтинг (вычисляется)
+  germinationSpeed: number; // скорость пророста (1-5)
+  maintenance: number;      // прихотливость (1-5, где 5 - очень прихотливое)
+  aroma: number;           // аромат (1-5)
+  flowerCount: number;     // количество соцветий (1-5)
+  flowerVolume: number;    // объём соцветий (1-5)
+  vegSpeed: number;        // скорость веги (1-5)
+  bloomSpeed: number;      // скорость цветения (1-5)
+  totalYield: number;      // общий урожай (1-5)
+  overallRating: number;   // общий рейтинг (вычисляется, 1-5)
 }

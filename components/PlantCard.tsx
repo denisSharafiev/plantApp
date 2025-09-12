@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { Link } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { plantEventsService } from '../services/plantEventsService';
 import { Plant } from '../types/plant';
+import { PlantRatingModal } from './PlantRatingModal';
 
 interface PlantCardProps {
   plant: Plant;
@@ -19,8 +20,8 @@ interface PlantCardProps {
 const NextEvent: React.FC<{ plantId: string }> = ({ plantId }) => {
   const [nextEvent, setNextEvent] = useState<any>(null);
 
-  useEffect(() => {
-    const event = plantEventsService.getNextEvent(plantId);
+  React.useEffect(() => {
+    const event = plantEventsService.getNextEventSimple(plantId);
     setNextEvent(event);
   }, [plantId]);
 
@@ -41,31 +42,8 @@ const NextEvent: React.FC<{ plantId: string }> = ({ plantId }) => {
     <View style={styles.nextEvent}>
       <Text style={styles.nextEventIcon}>{getEventIcon(nextEvent.type)}</Text>
       <Text style={styles.nextEventText}>
-        {format(new Date(nextEvent.date), 'dd.MM')} - {nextEvent.title}
+        {format(nextEvent.date, 'dd.MM')} - {nextEvent.title}
       </Text>
-    </View>
-  );
-};
-
-// Компонент для отображения графика полива
-const WateringInfo: React.FC<{ schedule: string }> = ({ schedule }) => {
-  const getScheduleText = (schedule: string) => {
-    const texts = {
-      daily: 'Ежедневно',
-      '2days': 'Каждые 2 дня',
-      '3days': 'Каждые 3 дня',
-      '4days': 'Каждые 4 дня',
-      '5days': 'Каждые 5 дней',
-      '6days': 'Каждые 6 дней',
-      '7days': 'Раз в неделю',
-    };
-    return texts[schedule as keyof typeof texts] || schedule;
-  };
-
-  return (
-    <View style={styles.wateringInfo}>
-      <Ionicons name="water" size={12} color="#007AFF" />
-      <Text style={styles.wateringText}>{getScheduleText(schedule)}</Text>
     </View>
   );
 };
@@ -77,6 +55,8 @@ export const PlantCard: React.FC<PlantCardProps> = ({
   onArchive,
   onUnarchive,
 }) => {
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+
   // Рассчитываем количество дней с посадки
   const getDaysSincePlanting = () => {
     const plantingDate = new Date(plant.plantingDate);
@@ -100,8 +80,7 @@ export const PlantCard: React.FC<PlantCardProps> = ({
   };
 
   const handleRatingPress = () => {
-    // Здесь будет навигация на страницу рейтинга
-    Alert.alert('Рейтинг', 'Функция рейтинга будет реализована в следующем обновлении');
+    setIsRatingModalVisible(true);
   };
 
   return (
@@ -118,13 +97,18 @@ export const PlantCard: React.FC<PlantCardProps> = ({
               </View>
             )}
             <View style={styles.headerInfo}>
-              <Text style={styles.name}>{plant.name}</Text>
+              <View style={styles.nameContainer}>
+                <Text style={styles.name}>{plant.name}</Text>
+                {/* ОТОБРАЖЕНИЕ РЕЙТИНГА - ВСТАВЛЯЕМ ЗДЕСЬ */}
+                {plant.ratings?.overallRating > 0 && (
+                  <View style={styles.ratingBadge}>
+                    <Ionicons name="star" size={12} color="#FFD700" />
+                    <Text style={styles.ratingText}>{plant.ratings.overallRating}</Text>
+                  </View>
+                )}
+              </View>
               
-              {/* Ближайшее событие вместо вида */}
               <NextEvent plantId={plant.id} />
-              
-              {/* График полива */}
-              <WateringInfo schedule={plant.wateringSchedule} />
             </View>
           </View>
 
@@ -191,18 +175,11 @@ export const PlantCard: React.FC<PlantCardProps> = ({
         onPress={handleRatingPress}
       >
         <Ionicons name="star" size={16} color="#FFD700" />
-        <Text style={styles.ratingText}>Оценить</Text>
+        <Text style={styles.ratingButtonText}>Оценить</Text>
       </TouchableOpacity>
 
-      {/* В компонент действий добавляем кнопку календаря: */}
+      {/* Кнопки действий */}
       <View style={styles.actions}>
-        {/* Кнопка календаря */}
-        <Link href={`/plant/calendar/${plant.id}`} asChild>
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="calendar" size={20} color="#007AFF" />
-          </TouchableOpacity>
-        </Link>
-
         {onDelete && (
           <TouchableOpacity 
             onPress={() => onDelete(plant.id, plant.name)}
@@ -230,6 +207,13 @@ export const PlantCard: React.FC<PlantCardProps> = ({
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Модальное окно рейтинга */}
+      <PlantRatingModal
+        visible={isRatingModalVisible}
+        onClose={() => setIsRatingModalVisible(false)}
+        plant={plant}
+      />
     </View>
   );
 };
@@ -271,11 +255,32 @@ const styles = StyleSheet.create({
   headerInfo: {
     flex: 1,
   },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
   name: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 6,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9C4',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFEB3B',
+    marginLeft: 8,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#F57C00',
+    fontWeight: '600',
+    marginLeft: 4,
   },
   nextEvent: {
     flexDirection: 'row',
@@ -290,15 +295,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '500',
-  },
-  wateringInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  wateringText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
   },
   additionalInfo: {
     marginBottom: 12,
@@ -380,7 +376,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFEB3B',
   },
-  ratingText: {
+  ratingButtonText: {
     fontSize: 12,
     color: '#F57C00',
     fontWeight: '600',

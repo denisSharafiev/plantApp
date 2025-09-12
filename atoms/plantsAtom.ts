@@ -36,6 +36,7 @@ export const addPlantAtom = atom(
 );
 
 // Атом для обновления растения
+// Атом для обновления растения должен уже поддерживать любые поля
 export const updatePlantAtom = atom(
   null,
   async (get, set, { id, updates }: { id: string; updates: Partial<Plant> }) => {
