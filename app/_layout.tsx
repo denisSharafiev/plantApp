@@ -23,6 +23,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="tabs" />
           <Stack.Screen name="plant/[id]" />
+          <Stack.Screen name="plant/calendar/[id]" />
         </Stack>
       </Provider>
     </SafeAreaProvider>

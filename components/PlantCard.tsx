@@ -194,8 +194,15 @@ export const PlantCard: React.FC<PlantCardProps> = ({
         <Text style={styles.ratingText}>Оценить</Text>
       </TouchableOpacity>
 
-      {/* Кнопки действий */}
+      {/* В компонент действий добавляем кнопку календаря: */}
       <View style={styles.actions}>
+        {/* Кнопка календаря */}
+        <Link href={`/plant/calendar/${plant.id}`} asChild>
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="calendar" size={20} color="#007AFF" />
+          </TouchableOpacity>
+        </Link>
+
         {onDelete && (
           <TouchableOpacity 
             onPress={() => onDelete(plant.id, plant.name)}

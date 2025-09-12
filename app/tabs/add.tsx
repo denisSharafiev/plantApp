@@ -115,7 +115,6 @@ export default function AddScreen() {
     });
   };
 
-  // В функцию handleSubmit добавляем создание событий полива после добавления растения:
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.species.trim() || !formData.expectedDays.trim()) {
       Alert.alert('Ошибка', 'Пожалуйста, заполните обязательные поля');
@@ -147,6 +146,20 @@ export default function AddScreen() {
 
       // Создаем события полива для нового растения
       await plantEventsService.createWateringEventsForNewPlant(newPlant);
+
+      // ОЧИЩАЕМ ФОРМУ ПОСЛЕ УСПЕШНОГО ДОБАВЛЕНИЯ
+      setFormData({
+        name: '',
+        species: '',
+        seedBank: '',
+        price: '',
+        expectedDays: '',
+        wateringSchedule: '7days',
+        stage: 'прорастание',
+        plantingDate: new Date().toISOString(),
+        photos: [],
+        notes: '',
+      });
 
       Alert.alert('Успех', 'Растение успешно добавлено!', [
         {
