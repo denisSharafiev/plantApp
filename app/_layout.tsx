@@ -2,14 +2,22 @@ import { Stack } from 'expo-router';
 import { Provider } from 'jotai';
 import React, { useEffect } from 'react';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NotificationService } from '../services/notificationService';
 import { plantEventsService } from '../services/plantEventsService';
 
 export default function RootLayout() {
-  const insets = useSafeAreaInsets();
+
   useEffect(() => {
-    // Инициализируем сервис событий при запуске приложения
-    plantEventsService.initialize().catch(console.error);
+    // Инициализируем сервисы при запуске приложения
+    const initializeApp = async () => {
+      await plantEventsService.initialize();
+      await NotificationService.requestPermissions();
+    };
+
+    initializeApp().catch(console.error);
   }, []);
+
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaProvider>

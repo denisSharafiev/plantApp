@@ -1,6 +1,7 @@
 import * as FileSystem from 'expo-file-system';
 import { Plant, WateringSchedule } from '../types/plant';
 import { WateringEvent, WateringService } from './wateringService';
+import { NotificationService } from './notificationService';
 
 const EVENTS_FILE = `${FileSystem.documentDirectory}plant_events.json`;
 
@@ -14,6 +15,8 @@ export interface PlantEvent {
   completed: boolean;
   createdAt: string;
   updatedAt: string;
+  reminderMinutes?: number; // За сколько минут напоминать
+  notificationId?: string; // ID уведомления в системе
 }
 
 export interface PlantCalendar {
@@ -66,8 +69,8 @@ class PlantEventsService {
     };
   }
 
-  // Добавление custom события
-  async addCustomEvent(plantId: string, event: Omit<PlantEvent, 'id' | 'plantId' | 'createdAt' | 'updatedAt'>): Promise<PlantEvent> {
+  // В метод addCustomEvent добавляем создание напоминания:
+  async addCustomEvent(plantId: string, event: Omit<PlantEvent, 'id' | 'plantId' | 'createdAt' | 'updatedAt' | 'notificationId'>): Promise<PlantEvent> {
     const newEvent: PlantEvent = {
       ...event,
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -76,9 +79,80 @@ class PlantEventsService {
       updatedAt: new Date().toISOString(),
     };
 
+    // Создаем напоминание, если указано
+    if (event.reminderMinutes !== undefined && event.reminderMinutes > 0) {
+      try {
+        const notificationId = await NotificationService.scheduleEventNotification(
+          newEvent,
+          event.reminderMinutes
+        );
+        if (notificationId) {
+          newEvent.notificationId = notificationId;
+        }
+      } catch (error) {
+        console.error('Error scheduling notification:', error);
+      }
+    }
+
     this.events.push(newEvent);
     await this.saveEvents();
     return newEvent;
+  }
+
+  // Добавляем метод для обновления напоминаний
+  async updateEventReminder(eventId: string, reminderMinutes?: number): Promise<PlantEvent | null> {
+    const eventIndex = this.events.findIndex(e => e.id === eventId);
+    
+    if (eventIndex === -1) return null;
+
+    const event = this.events[eventIndex];
+
+    // Отменяем старое уведомление
+    if (event.notificationId) {
+      await NotificationService.cancelNotification(event.notificationId);
+    }
+
+    // Создаем новое уведомление, если нужно
+    let notificationId: string | undefined;
+    if (reminderMinutes !== undefined && reminderMinutes > 0) {
+      try {
+        const newNotificationId = await NotificationService.scheduleEventNotification(
+          { ...event, reminderMinutes },
+          reminderMinutes
+        );
+        if (newNotificationId) {
+          notificationId = newNotificationId;
+        }
+      } catch (error) {
+        console.error('Error scheduling notification:', error);
+      }
+    }
+
+    const updatedEvent = {
+      ...event,
+      reminderMinutes,
+      notificationId,
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.events[eventIndex] = updatedEvent;
+    await this.saveEvents();
+    
+    return updatedEvent;
+  }
+
+  // Добавляем отмену напоминаний при удалении события
+  async deletePlantEvents(plantId: string): Promise<void> {
+    // Отменяем все уведомления для событий растения
+    const plantEvents = this.events.filter(event => event.plantId === plantId);
+    for (const event of plantEvents) {
+      if (event.notificationId) {
+        await NotificationService.cancelNotification(event.notificationId);
+      }
+    }
+
+    this.events = this.events.filter(event => event.plantId !== plantId);
+    await this.saveEvents();
   }
 
   // Получение событий растения
@@ -193,10 +267,10 @@ class PlantEventsService {
   }
 
   // Удаление всех событий растения
-  async deletePlantEvents(plantId: string): Promise<void> {
-    this.events = this.events.filter(event => event.plantId !== plantId);
-    await this.saveEvents();
-  }
+  // async deletePlantEvents(plantId: string): Promise<void> {
+  //   this.events = this.events.filter(event => event.plantId !== plantId);
+  //   await this.saveEvents();
+  // }
 
   // Обновление события
   async updateEvent(eventId: string, updates: Partial<PlantEvent>): Promise<PlantEvent | null> {

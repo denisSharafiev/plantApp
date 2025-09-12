@@ -4,9 +4,10 @@ import { ru } from 'date-fns/locale';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { plantsAtom } from '../../../atoms/plantsAtom';
+import { AddEventModal } from '../../../components/AddEventModal';
 import { PlantEvent, plantEventsService } from '../../../services/plantEventsService';
 
 export default function PlantCalendarScreen() {
@@ -15,6 +16,8 @@ export default function PlantCalendarScreen() {
   const [plants] = useAtom(plantsAtom);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<PlantEvent[]>([]);
+  const [isAddEventModalVisible, setIsAddEventModalVisible] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const plant = plants.find(p => p.id === id);
 
@@ -22,7 +25,7 @@ export default function PlantCalendarScreen() {
     if (plant) {
       loadEvents();
     }
-  }, [plant, currentDate]);
+  }, [plant, currentDate, refreshTrigger]);
 
   const loadEvents = () => {
     if (!plant) return;
@@ -59,6 +62,43 @@ export default function PlantCalendarScreen() {
       custom: '#AF52DE',
     };
     return colors[type as keyof typeof colors] || '#8E8E93';
+  };
+
+  const handleAddEvent = async (eventData: { 
+    title: string; 
+    date: Date; 
+    type: string; 
+    description?: string;
+    reminderMinutes?: number;
+  }) => {
+    if (!plant) return;
+
+    try {
+      await plantEventsService.addCustomEvent(plant.id, {
+        date: eventData.date.toISOString(),
+        type: eventData.type as any,
+        title: eventData.title,
+        description: eventData.description,
+        completed: false,
+        reminderMinutes: eventData.reminderMinutes,
+      });
+
+      setRefreshTrigger(prev => prev + 1);
+      Alert.alert('Успех', 'Событие добавлено!');
+      setIsAddEventModalVisible(false); // Закрываем модальное окно
+    } catch (error) {
+      Alert.alert('Ошибка', 'Не удалось добавить событие');
+      console.error('Error adding event:', error);
+    }
+  };
+
+  const handleDayPress = (day: Date, dayEvents: PlantEvent[]) => {
+    if (dayEvents.length > 0) {
+      Alert.alert(
+        'События на ' + format(day, 'dd.MM.yyyy'),
+        dayEvents.map(event => `• ${event.title} (${event.type})`).join('\n')
+      );
+    }
   };
 
   if (!plant) {
@@ -117,6 +157,7 @@ export default function PlantCalendarScreen() {
               <TouchableOpacity
                 key={day.toISOString()}
                 style={[styles.dayCell, isToday && styles.todayCell]}
+                onPress={() => handleDayPress(day, dayEvents)}
               >
                 <Text style={styles.dayNumber}>{format(day, 'd')}</Text>
                 
@@ -159,10 +200,21 @@ export default function PlantCalendarScreen() {
       </View>
 
       {/* Add Event Button */}
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity 
+        style={styles.addButton}
+        onPress={() => setIsAddEventModalVisible(true)}
+      >
         <Ionicons name="add" size={24} color="white" />
         <Text style={styles.addButtonText}>Добавить событие</Text>
       </TouchableOpacity>
+
+      {/* Add Event Modal */}
+      <AddEventModal
+        visible={isAddEventModalVisible}
+        onClose={() => setIsAddEventModalVisible(false)}
+        onSave={handleAddEvent}
+        plantId={plant.id}
+      />
     </View>
   );
 }
