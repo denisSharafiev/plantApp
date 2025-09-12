@@ -1,11 +1,13 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
-import { Link } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ru } from 'date-fns/locale';
 
-import { plantEventsService } from '../services/plantEventsService';
 import { Plant } from '../types/plant';
+import { plantEventsService } from '../services/plantEventsService';
+import { WateringService } from '../services/wateringService';
 import { PlantRatingModal } from './PlantRatingModal';
 
 interface PlantCardProps {
@@ -21,7 +23,7 @@ const NextEvent: React.FC<{ plantId: string }> = ({ plantId }) => {
   const [nextEvent, setNextEvent] = useState<any>(null);
 
   React.useEffect(() => {
-    const event = plantEventsService.getNextEvent(plantId);
+    const event = plantEventsService.getNextEventSimple(plantId);
     setNextEvent(event);
   }, [plantId]);
 
@@ -44,29 +46,6 @@ const NextEvent: React.FC<{ plantId: string }> = ({ plantId }) => {
       <Text style={styles.nextEventText}>
         {format(nextEvent.date, 'dd.MM')} - {nextEvent.title}
       </Text>
-    </View>
-  );
-};
-
-// Компонент для отображения графика полива
-const WateringInfo: React.FC<{ schedule: string }> = ({ schedule }) => {
-  const getScheduleText = (schedule: string) => {
-    const texts = {
-      daily: 'Ежедневно',
-      '2days': 'Каждые 2 дня',
-      '3days': 'Каждые 3 дня',
-      '4days': 'Каждые 4 дня',
-      '5days': 'Каждые 5 дней',
-      '6days': 'Каждые 6 дней',
-      '7days': 'Раз в неделю',
-    };
-    return texts[schedule as keyof typeof texts] || schedule;
-  };
-
-  return (
-    <View style={styles.wateringInfo}>
-      <Ionicons name="water" size={12} color="#007AFF" />
-      <Text style={styles.wateringText}>{getScheduleText(schedule)}</Text>
     </View>
   );
 };
@@ -132,8 +111,6 @@ export const PlantCard: React.FC<PlantCardProps> = ({
               </View>
               
               <NextEvent plantId={plant.id} />
-              {/* График полива */}
-              <WateringInfo schedule={plant.wateringSchedule} />
             </View>
           </View>
 
@@ -425,14 +402,5 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     borderRadius: 8,
     backgroundColor: '#F8F9FA',
-  },
-  wateringInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  wateringText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
   },
 });

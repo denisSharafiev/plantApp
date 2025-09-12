@@ -35,7 +35,6 @@ export const addPlantAtom = atom(
   }
 );
 
-// Атом для обновления растения
 // Атом для обновления растения должен уже поддерживать любые поля
 export const updatePlantAtom = atom(
   null,
