@@ -17,12 +17,42 @@ interface PlantCardProps {
 }
 
 // Компонент для отображения ближайшего события
+// Вариант 1: Используем метод из сервиса (если он работает)
 const NextEvent: React.FC<{ plantId: string }> = ({ plantId }) => {
   const [nextEvent, setNextEvent] = useState<any>(null);
 
   React.useEffect(() => {
-    const event = plantEventsService.getNextEventSimple(plantId);
-    setNextEvent(event);
+    // Пробуем разные варианты вызова метода
+    try {
+      // Вариант 1: Если метод существует в сервисе
+      if (plantEventsService.getNextEventSimple) {
+        const event = plantEventsService.getNextEventSimple(plantId);
+        setNextEvent(event);
+      } 
+      // Вариант 2: Альтернативная реализация
+      else {
+        const plantEvents = plantEventsService.getPlantEvents(plantId);
+        const now = new Date();
+        
+        const futureEvents = plantEvents
+          .filter(event => new Date(event.date) > now && !event.completed)
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        if (futureEvents.length > 0) {
+          const event = futureEvents[0];
+          setNextEvent({
+            date: new Date(event.date),
+            title: event.title,
+            type: event.type
+          });
+        } else {
+          setNextEvent(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error getting next event:', error);
+      setNextEvent(null);
+    }
   }, [plantId]);
 
   if (!nextEvent) return null;

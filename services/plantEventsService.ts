@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system';
 import { Plant, WateringSchedule } from '../types/plant';
-import { WateringEvent, WateringService } from './wateringService';
 import { NotificationService } from './notificationService';
+import { WateringEvent, WateringService } from './wateringService';
 
 const EVENTS_FILE = `${FileSystem.documentDirectory}plant_events.json`;
 
@@ -266,12 +266,25 @@ class PlantEventsService {
     ];
   }
 
-  // Удаление всех событий растения
-  // async deletePlantEvents(plantId: string): Promise<void> {
-  //   this.events = this.events.filter(event => event.plantId !== plantId);
-  //   await this.saveEvents();
-  // }
+  getNextEventSimple(plantId: string): { date: Date; title: string; type: string } | null {
+    const plantEvents = this.getPlantEvents(plantId);
+    const now = new Date();
 
+    const futureEvents = plantEvents
+      .filter(event => new Date(event.date) > now && !event.completed)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    if (futureEvents.length > 0) {
+      const event = futureEvents[0];
+      return {
+        date: new Date(event.date),
+        title: event.title,
+        type: event.type
+      };
+    }
+
+    return null;
+  }
   // Обновление события
   async updateEvent(eventId: string, updates: Partial<PlantEvent>): Promise<PlantEvent | null> {
     const eventIndex = this.events.findIndex(e => e.id === eventId);
@@ -303,6 +316,3 @@ class PlantEventsService {
 }
 
 export const plantEventsService = new PlantEventsService();
-
-// Инициализация при запуске приложения
-plantEventsService.initialize().catch(console.error);
