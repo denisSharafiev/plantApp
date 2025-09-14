@@ -1,34 +1,43 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom, useSetAtom } from 'jotai';
-import React, { useState } from 'react';
 import {
   Alert,
-  FlatList,
   Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
-import { archivePlantAtom, plantsAtom, updatePlantStageAtom } from '../../atoms/plantsAtom';
-import { StageToggle } from '../../components/StageToggle';
-import { plantEventsService } from '../../services/plantEventsService';
-import { PlantStage, WateringSchedule } from '../../types/plant';
+
+import {
+  archivePlantAtom,
+  plantsAtom,
+  updatePhaseNotesAtom,
+  updatePlantAtom,
+  updatePlantPhaseAtom
+} from '../../atoms/plantsAtom';
+import { CameraButton } from '../../components/CameraButton';
+import { PlantPhaseManager } from '../../components/PlantPhaseManager';
+import { fileStorage } from '../../services/fileStorage';
+// import { plantEventsService } from '../../services/plantEventsService';
+import { Plant, PlantPhase, PlantStage } from '../../types/plant';
+// import {WateringSchedule} from '../../types/plant';
+
 
 export default function PlantDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [plants] = useAtom(plantsAtom);
-  const updatePlantStage = useSetAtom(updatePlantStageAtom);
+  const updatePlantPhase = useSetAtom(updatePlantPhaseAtom);
+  const updatePhaseNotes = useSetAtom(updatePhaseNotesAtom);
+  const [, updatePlant] = useAtom(updatePlantAtom);
   const archivePlant = useSetAtom(archivePlantAtom);
 
   const plant = plants.find(p => p.id === id);
-
-  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
-
+  
   if (!plant) {
     return (
       <View style={styles.container}>
@@ -36,15 +45,6 @@ export default function PlantDetailScreen() {
       </View>
     );
   }
-
-  const handleStageToggle = async (stage: PlantStage, dateField: keyof typeof plant) => {
-    try {
-      await updatePlantStage({ id: plant.id, stage, dateField });
-      Alert.alert('Успех', `Стадия обновлена на "${stage}"`);
-    } catch (error) {
-      Alert.alert('Ошибка', 'Не удалось обновить стадию');
-    }
-  };
 
   const handleArchive = async () => {
     try {
@@ -67,29 +67,158 @@ export default function PlantDetailScreen() {
     );
   };
 
-  const getDaysSince = (dateString?: string) => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  };
+  // const getDaysSince = (dateString?: string) => {
+  //   if (!dateString) return null;
+  //   const date = new Date(dateString);
+  //   const now = new Date();
+  //   const diffTime = Math.abs(now.getTime() - date.getTime());
+  //   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // };
 
   // Добавляем функцию для обновления графика полива
-  const handleWateringScheduleUpdate = async (newSchedule: WateringSchedule) => {
+  // const handleWateringScheduleUpdate = async (newSchedule: WateringSchedule) => {
+  //   try {
+  //     await plantEventsService.updateWateringSchedule(
+  //       plant.id,
+  //       newSchedule,
+  //       plant.plantingDate
+  //     );
+  //     Alert.alert('Успех', 'График полива обновлен');
+  //   } catch (error) {
+  //     Alert.alert('Ошибка', 'Не удалось обновить график полива');
+  //     console.error('Error updating watering schedule:', error);
+  //   }
+  // };
+
+  const handleAddPhoto = async (photoUri: string) => {
+    // Создаем безопасный массив фотографий
+    const currentPhotos = plant.photos || [];
+    
+    if (currentPhotos.length >= 5) {
+      Alert.alert('Ошибка', 'Можно добавить не более 5 фото');
+      return;
+    }
+
     try {
-      await plantEventsService.updateWateringSchedule(
-        plant.id,
-        newSchedule,
-        plant.plantingDate
-      );
-      Alert.alert('Успех', 'График полива обновлен');
+      const savedPhotoUri = await fileStorage.saveCameraPhoto(photoUri);
+      const updatedPhotos = [...currentPhotos, savedPhotoUri];
+      
+      // Если это первое фото, устанавливаем его как аватарку
+      const updates: Partial<Plant> = { photos: updatedPhotos };
+      if (updatedPhotos.length === 1) {
+        updates.avatarPhoto = savedPhotoUri;
+        updates.photo = savedPhotoUri;
+      }
+      
+      await updatePlant({ id: plant.id, updates });
+      
+      Alert.alert('Успех', 'Фото добавлено');
     } catch (error) {
-      Alert.alert('Ошибка', 'Не удалось обновить график полива');
-      console.error('Error updating watering schedule:', error);
+      console.error('Error saving photo:', error);
+      Alert.alert('Ошибка', 'Не удалось сохранить фото');
     }
   };
 
+  const deletePhoto = async (index: number) => {
+    try {
+      const currentPhotos = plant.photos || [];
+      if (currentPhotos.length <= index) return;
+
+      const photoToDelete = currentPhotos[index];
+      const updatedPhotos = currentPhotos.filter((_, i) => i !== index);
+
+      // Удаляем фото из хранилища
+      await fileStorage.deletePhoto(photoToDelete);
+      
+      // Проверяем, было ли это фото аватаркой
+      const updates: Partial<Plant> = { photos: updatedPhotos };
+      if (plant.avatarPhoto === photoToDelete) {
+        // Если удаляем аватарку, устанавливаем первую фото как новую аватарку
+        updates.avatarPhoto = updatedPhotos[0];
+        updates.photo = updatedPhotos[0];
+      }
+      
+      // Обновляем растение
+      await updatePlant({ id: plant.id, updates });
+      
+      Alert.alert('Успех', 'Фото удалено');
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      Alert.alert('Ошибка', 'Не удалось удалить фото');
+    }
+  };
+
+  const handleSetAvatar = async (index: number) => {
+    try {
+      // Проверяем, что photos существует и содержит фото по индексу
+      if (!plant.photos || plant.photos.length <= index) {
+        Alert.alert('Ошибка', 'Фото не найдено');
+        return;
+      }
+
+      const avatarPhoto = plant.photos[index];
+      
+      // Обновляем растение с новой аватаркой
+      await updatePlant({ 
+        id: plant.id, 
+        updates: { 
+          avatarPhoto,
+          photo: avatarPhoto // Основное фото растения
+        } 
+      });
+      
+      Alert.alert('Успех', 'Фото установлено как основное');
+    } catch (error) {
+      console.error('Error setting avatar:', error);
+      Alert.alert('Ошибка', 'Не удалось установить фото как основное');
+    }
+  };
+
+  // Вспомогательная функция для цвета стадии
+  const getStageColor = (stage: PlantStage) => {
+    switch (stage) {
+      case 'прорастание': return '#FF9500';
+      case 'рассада': return '#34C759';
+      case 'вегетация': return '#5856D6';
+      case 'цветение': return '#FF2D55';
+      case 'урожай готов!': return '#AF52DE';
+      default: return '#8E8E93';
+    }
+  };
+
+  // Добавляем функции для работы с фазами
+  const handlePhaseChange = async (newStage: PlantStage, startDate: Date, notes?: string) => {
+    try {
+      await updatePlantPhase({ 
+        id: plant.id, 
+        newStage, 
+        startDate 
+      });
+      
+      Alert.alert('Успех', `Фаза изменена на "${newStage}"`);
+    } catch (error) {
+      console.error('Error changing phase:', error);
+      Alert.alert('Ошибка', 'Не удалось изменить фазу');
+    }
+  };
+
+  const handlePhaseUpdate = async (phaseIndex: number, updates: Partial<PlantPhase>) => {
+    try {
+      if (updates.notes !== undefined) {
+        await updatePhaseNotes({
+          id: plant.id,
+          phaseIndex,
+          notes: updates.notes
+        });
+      }
+      
+      Alert.alert('Успех', 'Заметки сохранены');
+    } catch (error) {
+      console.error('Error updating phase:', error);
+      Alert.alert('Ошибка', 'Не удалось сохранить заметки');
+    }
+  };
+ 
   return (
     <ScrollView style={styles.container}>
       {/* Заголовок */}
@@ -102,124 +231,92 @@ export default function PlantDetailScreen() {
       </View>
 
       {/* Основное фото */}
-      {plant.photos.length > 0 && (
+      {plant.photos && plant.photos.length > 0 ? (
         <View style={styles.mainPhotoContainer}>
           <Image 
-            source={{ uri: plant.photos[selectedPhotoIndex] }} 
+            source={{ uri: plant.avatarPhoto || plant.photos[0] }} 
             style={styles.mainPhoto}
             resizeMode="cover"
           />
         </View>
+      ) : (
+        <View style={styles.mainPhotoContainer}>
+          <View style={styles.placeholderPhoto}>
+            <Ionicons name="leaf-outline" size={64} color="#666" />
+            <Text style={styles.placeholderText}>Нет фото</Text>
+          </View>
+        </View>
       )}
 
       {/* Миниатюры фото */}
-      {plant.photos.length > 1 && (
-        <FlatList
-          data={plant.photos}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.thumbnailsContainer}
-          renderItem={({ item, index }) => (
-            <TouchableOpacity onPress={() => setSelectedPhotoIndex(index)}>
-              <Image 
-                source={{ uri: item }} 
-                style={[
-                  styles.thumbnail,
-                  index === selectedPhotoIndex && styles.thumbnailSelected
-                ]}
-              />
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item, index) => index.toString()}
-        />
+      {/* Горизонтальный список фото */}
+      {plant.photos && plant.photos.length > 0 ? (
+        <View style={styles.photosContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.horizontalScroll}
+          >
+            {(plant.photos || []).map((photo, index) => (
+              <View key={index} style={styles.photoItem}>
+                <Image source={{ uri: photo }} style={styles.photo} />
+                <View style={styles.photoActions}>
+                  <TouchableOpacity
+                    style={[
+                      styles.avatarButton,
+                      plant.avatarPhoto === photo && styles.avatarButtonActive
+                    ]}
+                    onPress={() => handleSetAvatar(index)}
+                  >
+                    <Ionicons
+                      name={plant.avatarPhoto === photo ? 'star' : 'star-outline'}
+                      size={16}
+                      color={plant.avatarPhoto === photo ? '#FFD700' : '#666'}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deletePhotoButton}
+                    onPress={() => deletePhoto(index)}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#FF3B30" />
+                  </TouchableOpacity>
+                </View>
+                {plant.avatarPhoto === photo && (
+                  <View style={styles.avatarBadge}>
+                    <Ionicons name="star" size={12} color="#FFD700" />
+                  </View>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      ) : (
+        <Text style={styles.noPhotosText}>Нет добавленных фотографий</Text>
       )}
+      <CameraButton
+        onPhotoTaken={handleAddPhoto}
+        disabled={plant.photos && plant.photos.length >= 5}
+      />
+
 
       {/* Информация */}
-      <View style={styles.infoSection}>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Вид:</Text>
-          <Text style={styles.infoValue}>{plant.species}</Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Заявленный срок:</Text>
-          <Text style={styles.infoValue}>{plant.expectedDays} дней</Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Стадия:</Text>
-          <View style={[styles.stageBadge, { backgroundColor: getStageColor(plant.stage) + '20' }]}>
-            <View style={[styles.stageDot, { backgroundColor: getStageColor(plant.stage) }]} />
-            <Text style={[styles.stageText, { color: getStageColor(plant.stage) }]}>
-              {plant.stage}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Дата посадки:</Text>
-          <Text style={styles.infoValue}>
-            {new Date(plant.plantingDate).toLocaleDateString('ru-RU')}
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Стадия:</Text>
+        <View style={[styles.stageBadge, { backgroundColor: getStageColor(plant.currentStage) + '20' }]}>
+          <View style={[styles.stageDot, { backgroundColor: getStageColor(plant.currentStage) }]} />
+          <Text style={[styles.stageText, { color: getStageColor(plant.currentStage) }]}>
+            {plant.currentStage}
           </Text>
         </View>
-
-        {plant.germinationDate && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Дата прорастания:</Text>
-            <Text style={styles.infoValue}>
-              {new Date(plant.germinationDate).toLocaleDateString('ru-RU')}
-              {` (${getDaysSince(plant.germinationDate)} дней назад)`}
-            </Text>
-          </View>
-        )}
-
-        {plant.notes && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Заметки:</Text>
-            <Text style={styles.infoValue}>{plant.notes}</Text>
-          </View>
-        )}
       </View>
 
       {/* Управление стадиями */}
-      <View style={styles.stagesSection}>
-        <Text style={styles.sectionTitle}>Управление стадиями</Text>
-
-        <StageToggle
-          label="Прорастание"
-          isActive={!!plant.germinationDate}
-          onToggle={() => handleStageToggle('прорастание', 'germinationDate')}
-          disabled={!!plant.germinationDate}
-        />
-
-        <StageToggle
-          label="Рассада"
-          isActive={!!plant.transplantDate}
-          onToggle={() => handleStageToggle('рассада', 'transplantDate')}
-          disabled={!!plant.transplantDate || !plant.germinationDate}
-        />
-
-        <StageToggle
-          label="Вегетация"
-          isActive={!!plant.vegetationDate}
-          onToggle={() => handleStageToggle('вегетация', 'vegetationDate')}
-          disabled={!!plant.vegetationDate || !plant.transplantDate}
-        />
-
-        <StageToggle
-          label="Цветение"
-          isActive={!!plant.floweringDate}
-          onToggle={() => handleStageToggle('цветение', 'floweringDate')}
-          disabled={!!plant.floweringDate || !plant.vegetationDate}
-        />
-
-        <StageToggle
-          label="Сбор урожая"
-          isActive={!!plant.harvestDate}
-          onToggle={() => handleStageToggle('урожай готов!', 'harvestDate')}
-          disabled={!!plant.harvestDate || !plant.floweringDate}
-        />
-      </View>
+      <PlantPhaseManager
+        currentStage={plant.currentStage}
+        phases={plant.phases || []}
+        onPhaseChange={handlePhaseChange}
+        onPhaseUpdate={handlePhaseUpdate}
+      />
 
       {/* Кнопка архива */}
       {!plant.isArchived && (
@@ -232,17 +329,17 @@ export default function PlantDetailScreen() {
   );
 }
 
-// Вспомогательная функция для цвета стадии
-const getStageColor = (stage: string) => {
-  switch (stage) {
-    case 'прорастание': return '#FF9500';
-    case 'рассада': return '#34C759';
-    case 'вегетация': return '#5856D6';
-    case 'цветение': return '#FF2D55';
-    case 'урожай готов!': return '#AF52DE';
-    default: return '#8E8E93';
-  }
-};
+  // Вспомогательная функция для цвета стадии
+  // const getStageColor = (stage: string) => {
+  //   switch (stage) {
+  //     case 'прорастание': return '#FF9500';
+  //     case 'рассада': return '#34C759';
+  //     case 'вегетация': return '#5856D6';
+  //     case 'цветение': return '#FF2D55';
+  //     case 'урожай готов!': return '#AF52DE';
+  //     default: return '#8E8E93';
+  //   }
+  // };
 
 const styles = StyleSheet.create({
   container: {
@@ -287,7 +384,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   thumbnailSelected: {
-    borderColor: '#007AFF',
+    borderColor: '#32CD32',
   },
   infoSection: {
     backgroundColor: 'white',
@@ -354,5 +451,70 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: '#8E8E93',
     fontWeight: '600',
+  },
+  photosContainer: {
+    padding: 10,
+    marginBottom: 16,
+  },
+  horizontalScroll: {
+    marginHorizontal: -4,
+  },
+  photoItem: {
+    position: 'relative',
+    marginRight: 12,
+    marginHorizontal: 4,
+  },
+  photo: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  photoActions: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    flexDirection: 'row',
+    gap: 4,
+  },
+  avatarButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 12,
+    padding: 4,
+  },
+  avatarButtonActive: {
+    backgroundColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  deletePhotoButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 12,
+    padding: 4,
+  },
+  avatarBadge: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 2,
+    borderWidth: 1,
+    borderColor: '#FFD700',
+  },
+  noPhotosText: {
+    textAlign: 'center',
+    color: '#666',
+    marginVertical: 16,
+    fontStyle: 'italic',
+  },
+  placeholderPhoto: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    marginTop: 8,
+    color: '#666',
+    fontSize: 16,
   },
 });

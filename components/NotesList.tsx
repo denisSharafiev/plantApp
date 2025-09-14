@@ -85,7 +85,7 @@ export const NotesList: React.FC<NotesListProps> = ({ onEditNote, onViewNote, re
           style={styles.actionButton}
           onPress={() => onEditNote(item)}
         >
-          <Ionicons name="create" size={20} color="#007AFF" />
+          <Ionicons name="create" size={20} color="#32CD32" />
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.actionButton}

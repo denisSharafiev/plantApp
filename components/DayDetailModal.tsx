@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   closeButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#32CD32',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',

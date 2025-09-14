@@ -1,6 +1,13 @@
 export type PlantStage = 'прорастание' | 'рассада' | 'вегетация' | 'цветение' | 'урожай готов!';
 export type WateringSchedule = 'daily' | '2days' | '3days' | '4days' | '5days' | '6days' | '7days';
 
+export interface PlantPhase {
+  stage: PlantStage;
+  startDate: string;
+  endDate?: string;
+  notes?: string;
+}
+
 export interface Plant {
   id: string;
   name: string;
@@ -9,20 +16,17 @@ export interface Plant {
   price?: number;
   wateringSchedule: WateringSchedule;
   expectedDays: number;
-  stage: PlantStage;
+  currentStage: PlantStage; // Текущая активная фаза
+  phases: PlantPhase[]; // История всех фаз
   plantingDate: string;
-  germinationDate?: string;
-  transplantDate?: string;
-  vegetationDate?: string;
-  floweringDate?: string;
-  harvestDate?: string;
   notes?: string;
-  photos: string[];
+  photos?: string[];
+  photo?: string;
   avatarPhoto?: string;
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
-  ratings?: PlantRatings; // Добавляем рейтинги
+  ratings?: PlantRatings;
 }
 
 export interface PlantFormData {
@@ -46,3 +50,4 @@ export interface PlantRatings {
   totalYield: number;      // общий урожай (1-5)
   overallRating: number;   // общий рейтинг (вычисляется, 1-5)
 }
+

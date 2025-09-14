@@ -21,7 +21,7 @@ export const NoteDetail: React.FC<NoteDetailProps> = ({ note, onClose, onEdit })
         </TouchableOpacity>
         <Text style={styles.title}>Просмотр заметки</Text>
         <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-          <Ionicons name="create" size={24} color="#007AFF" />
+          <Ionicons name="create" size={24} color="#32CD32" />
         </TouchableOpacity>
       </View>
 

@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#007AFF',
+    borderLeftColor: '#32CD32',
   },
   recommendationTitle: {
     fontSize: 16,

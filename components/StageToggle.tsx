@@ -29,7 +29,7 @@ export const StageToggle: React.FC<StageToggleProps> = ({
         <Ionicons
           name={isActive ? 'checkmark-circle' : 'ellipse-outline'}
           size={24}
-          color={isActive ? '#34C759' : disabled ? '#CCC' : '#007AFF'}
+          color={isActive ? '#34C759' : disabled ? '#CCC' : '#32CD32'}
         />
         <Text style={[
           styles.label,

@@ -102,7 +102,7 @@ export const PlantRating: React.FC<PlantRatingProps> = ({
       {ratingCategories.map(category => (
         <View key={category.key} style={styles.ratingCategory}>
           <View style={styles.categoryHeader}>
-            <Ionicons name={category.icon as any} size={20} color="#007AFF" />
+            <Ionicons name={category.icon as any} size={20} color="#32CD32" />
             <Text style={styles.categoryLabel}>{category.label}</Text>
           </View>
           {renderStars(category.key as keyof PlantRatings, currentRatings[category.key as keyof PlantRatings] || 0)}
@@ -163,6 +163,6 @@ const styles = StyleSheet.create({
   overallValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#32CD32',
   },
 });

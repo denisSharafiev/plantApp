@@ -113,7 +113,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                   <Ionicons 
                     name={eventType.icon as any} 
                     size={20} 
-                    color={type === eventType.value ? 'white' : '#007AFF'} 
+                    color={type === eventType.value ? 'white' : '#32CD32'} 
                   />
                   <Text style={[
                     styles.typeButtonText,
@@ -136,7 +136,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
 
             <Text style={styles.label}>Дата и время *</Text>
             <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-              <Ionicons name="calendar" size={20} color="#007AFF" />
+              <Ionicons name="calendar" size={20} color="#32CD32" />
               <Text style={styles.dateText}>
                 {date.toLocaleString('ru-RU', {
                   day: '2-digit',
@@ -256,8 +256,8 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   typeButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: '#32CD32',
+    borderColor: '#32CD32',
   },
   typeButtonText: {
     marginLeft: 8,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6C757D',
   },
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#32CD32',
   },
   buttonText: {
     color: 'white',

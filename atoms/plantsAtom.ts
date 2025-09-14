@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 import { fileStorage } from '../services/fileStorage';
 import { plantEventsService } from '../services/plantEventsService';
-import { Plant, PlantStage } from '../types/plant';
+import { Plant, PlantPhase, PlantStage } from '../types/plant';
 
 // Атом для списка растений
 export const plantsAtom = atom<Plant[]>([]);
@@ -118,30 +118,95 @@ export const unarchivePlantAtom = atom(
 );
 
 // Атом для обновления стадии растения
-export const updatePlantStageAtom = atom(
+export const updatePlantPhaseAtom = atom(
   null,
-  async (get, set, { id, stage, dateField }: { 
+  async (get, set, { 
+    id, 
+    newStage, 
+    startDate 
+  }: { 
     id: string; 
-    stage: PlantStage; 
-    dateField: keyof Plant; 
+    newStage: PlantStage; 
+    startDate: Date;
   }) => {
     try {
-      const updates: Partial<Plant> = { 
-        stage,
-        [dateField]: new Date().toISOString(),
+      const currentPlants = get(plantsAtom);
+      const plant = currentPlants.find(p => p.id === id);
+      
+      if (!plant) throw new Error('Plant not found');
+
+      // Завершаем текущую фазу (если она есть)
+      const updatedPhases = (plant.phases || []).map(phase => {
+        if (!phase.endDate && phase.stage !== newStage) {
+          return { ...phase, endDate: new Date().toISOString() };
+        }
+        return phase;
+      });
+
+      // Добавляем новую фазу
+      const newPhase: PlantPhase = {
+        stage: newStage,
+        startDate: startDate.toISOString()
+      };
+
+      const updates: Partial<Plant> = {
+        currentStage: newStage,
+        phases: [...updatedPhases, newPhase],
         updatedAt: new Date().toISOString()
       };
-      
+
       const updatedPlant = await fileStorage.updatePlant(id, updates);
       if (updatedPlant) {
-        const currentPlants = get(plantsAtom);
-        set(plantsAtom, currentPlants.map(plant => 
-          plant.id === id ? updatedPlant : plant
+        set(plantsAtom, currentPlants.map(p => 
+          p.id === id ? updatedPlant : p
         ));
       }
       return updatedPlant;
     } catch (error) {
-      console.error('Error updating plant stage:', error);
+      console.error('Error updating plant phase:', error);
+      throw error;
+    }
+  }
+);
+
+// Атом для обновления заметок фазы
+export const updatePhaseNotesAtom = atom(
+  null,
+  async (get, set, { 
+    id, 
+    phaseIndex, 
+    notes 
+  }: { 
+    id: string; 
+    phaseIndex: number; 
+    notes: string;
+  }) => {
+    try {
+      const currentPlants = get(plantsAtom);
+      const plant = currentPlants.find(p => p.id === id);
+      
+      if (!plant || !plant.phases || phaseIndex >= plant.phases.length) {
+        throw new Error('Plant or phase not found');
+      }
+
+      const updatedPhases = plant.phases.map((phase, index) =>
+        index === phaseIndex ? { ...phase, notes } : phase
+      );
+
+      const updates: Partial<Plant> = {
+        phases: updatedPhases,
+        updatedAt: new Date().toISOString()
+      };
+
+      const updatedPlant = await fileStorage.updatePlant(id, updates);
+      if (updatedPlant) {
+        set(plantsAtom, currentPlants.map(p => 
+          p.id === id ? updatedPlant : p
+        ));
+      }
+      return updatedPlant;
+    } catch (error) {
+      console.error('Error updating phase notes:', error);
       throw error;
     }
   }

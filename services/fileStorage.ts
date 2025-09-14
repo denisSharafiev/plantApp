@@ -54,9 +54,14 @@ class FileStorage {
     }
   }
 
+
   // Удаляем все фото растения
   async deletePlantPhotos(photoUris: string[]): Promise<void> {
     try {
+      if (!photoUris || photoUris.length === 0) {
+        return; // Ничего не делаем если массив пустой или undefined
+      }
+      
       for (const uri of photoUris) {
         await this.deletePhoto(uri);
       }
@@ -75,13 +80,17 @@ class FileStorage {
       }
       
       const content = await FileSystem.readAsStringAsync(PLANTS_FILE);
-      return JSON.parse(content) as Plant[];
+      const plants = JSON.parse(content) as Plant[];
+      
+      // Мигрируем старые данные
+      return await this.migratePlants(plants);
     } catch (error) {
       console.error('Error reading plants:', error);
       return [];
     }
   }
 
+  // В методе addPlant обновляем создание нового растения:
   async addPlant(plant: Omit<Plant, 'id' | 'createdAt' | 'updatedAt'>): Promise<Plant> {
     try {
       const plants = await this.getPlants();
@@ -91,6 +100,11 @@ class FileStorage {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        // Добавляем начальную фазу если её нет
+        phases: plant.phases || [{
+          stage: plant.currentStage,
+          startDate: plant.plantingDate
+        }]
       };
 
       const updatedPlants = [...plants, newPlant];
@@ -132,8 +146,10 @@ class FileStorage {
       const plantToDelete = plants.find(plant => plant.id === id);
       
       if (plantToDelete) {
-        // Удаляем фото растения
-        await this.deletePlantPhotos(plantToDelete.photos);
+        // Удаляем фото растения (если они есть)
+        if (plantToDelete.photos && plantToDelete.photos.length > 0) {
+          await this.deletePlantPhotos(plantToDelete.photos);
+        }
       }
 
       const filteredPlants = plants.filter(plant => plant.id !== id);
@@ -157,6 +173,23 @@ class FileStorage {
 
   private async savePlants(plants: Plant[]): Promise<void> {
     await FileSystem.writeAsStringAsync(PLANTS_FILE, JSON.stringify(plants));
+  }
+
+  private async migratePlants(plants: any[]): Promise<Plant[]> {
+    return plants.map(plant => {
+      // Если у растения старая структура (со полем stage вместо currentStage)
+      if (plant.stage && !plant.currentStage) {
+        return {
+          ...plant,
+          currentStage: plant.stage,
+          phases: plant.phases || [{
+            stage: plant.stage,
+            startDate: plant.plantingDate
+          }]
+        };
+      }
+      return plant;
+    });
   }
 }
 

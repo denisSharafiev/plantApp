@@ -41,7 +41,7 @@ export default function AddScreen() {
     seedBank: '',
     price: '',
     expectedDays: '',
-    wateringSchedule: '7days',
+    wateringSchedule: '2days',
     stage: 'прорастание',
     plantingDate: new Date().toISOString(),
     photos: [],
@@ -121,11 +121,6 @@ export default function AddScreen() {
       return;
     }
 
-    if (isNaN(Number(formData.expectedDays)) || Number(formData.expectedDays) <= 0) {
-      Alert.alert('Ошибка', 'Заявленный срок должен быть положительным числом');
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -136,7 +131,11 @@ export default function AddScreen() {
         price: formData.price ? Number(formData.price) : undefined,
         expectedDays: Number(formData.expectedDays),
         wateringSchedule: formData.wateringSchedule,
-        stage: formData.stage,
+        currentStage: formData.stage, // Используем currentStage вместо stage
+        phases: [{
+          stage: formData.stage,
+          startDate: formData.plantingDate
+        }],
         plantingDate: formData.plantingDate,
         notes: formData.notes?.trim() || undefined,
         photos: formData.photos,
@@ -161,7 +160,7 @@ export default function AddScreen() {
         notes: '',
       });
 
-      Alert.alert('Успех', 'Растение успешно добавлено!', [
+      Alert.alert('Успешно', 'Растение успешно добавлено!', [
         {
           text: 'OK',
           onPress: () => router.back(),
@@ -235,7 +234,7 @@ export default function AddScreen() {
             onChange={(schedule) => setFormData(prev => ({ ...prev, wateringSchedule: schedule }))}
           />
 
-          <Text style={styles.label}>Стадия *</Text>
+          <Text style={styles.label}>Текущая стадия *</Text>
           <DropDownPicker
             open={isStageDropdownOpen}
             value={formData.stage}
@@ -458,6 +457,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelButton: {
     backgroundColor: '#6C757D',
@@ -469,5 +469,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
   },
 });

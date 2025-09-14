@@ -137,7 +137,7 @@ export const PlantRatingModal: React.FC<PlantRatingModalProps> = ({
             {ratingCategories.map(category => (
               <View key={category.key} style={styles.ratingCategory}>
                 <View style={styles.categoryHeader}>
-                  <Ionicons name={category.icon as any} size={20} color="#007AFF" />
+                  <Ionicons name={category.icon as any} size={20} color="#32CD32" />
                   <Text style={styles.categoryLabel}>{category.label}</Text>
                   <Text style={styles.ratingValue}>
                     {ratings[category.key as keyof PlantRatings]}
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   ratingValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#32CD32',
     minWidth: 20,
     textAlign: 'right',
   },
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   overallValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#32CD32',
   },
   buttons: {
     flexDirection: 'row',
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6C757D',
   },
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#32CD32',
   },
   buttonText: {
     color: 'white',

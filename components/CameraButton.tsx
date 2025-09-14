@@ -44,7 +44,7 @@ export const CameraButton: React.FC<CameraButtonProps> = ({
       onPress={takePhoto}
       disabled={disabled}
     >
-      <Ionicons name="camera" size={24} color={disabled ? '#999' : '#007AFF'} />
+      <Ionicons name="camera" size={24} color={disabled ? '#999' : '#32CD32'} />
       <Text style={[styles.text, disabled && styles.disabledText]}>
         Сделать фото
       </Text>
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F8F9FA',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#32CD32',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   text: {
     marginLeft: 8,
-    color: '#007AFF',
+    color: '#32CD32',
     fontWeight: '600',
   },
   disabledText: {

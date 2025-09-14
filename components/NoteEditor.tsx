@@ -145,8 +145,8 @@ const styles = StyleSheet.create({
     borderColor: '#E9ECEF',
   },
   plantButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: '#32CD32',
+    borderColor: '#32CD32',
   },
   plantButtonText: {
     color: '#666',

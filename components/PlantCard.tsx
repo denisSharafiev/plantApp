@@ -94,8 +94,8 @@ export const PlantCard: React.FC<PlantCardProps> = ({
   const getStageColor = (stage: string) => {
     switch (stage) {
       case 'прорастание': return '#FF9500';
-      case 'рассада': return '#34C759';
-      case 'вегетация': return '#5856D6';
+      case 'рассада': return '#5856D6';
+      case 'вегетация': return '#34C759';
       case 'цветение': return '#FF2D55';
       case 'урожай готов!': return '#AF52DE';
       default: return '#8E8E93';
@@ -163,7 +163,7 @@ export const PlantCard: React.FC<PlantCardProps> = ({
               <View 
                 style={[
                   styles.progressFill,
-                  { width: `${progressPercentage}%`, backgroundColor: getStageColor(plant.stage) }
+                  { width: `${progressPercentage}%`, backgroundColor: getStageColor(plant.currentStage) }
                 ]} 
               />
             </View>
@@ -174,14 +174,14 @@ export const PlantCard: React.FC<PlantCardProps> = ({
             <View 
               style={[
                 styles.stageDot,
-                { backgroundColor: getStageColor(plant.stage) }
+                { backgroundColor: getStageColor(plant.currentStage) }
               ]} 
             />
-            <Text style={styles.stageText}>{plant.stage}</Text>
+            <Text style={styles.stageText}>{plant.currentStage}</Text>
           </View>
 
           {/* Даты */}
-          <View style={styles.dates}>
+          {/* <View style={styles.dates}>
             <Text style={styles.dateText}>
               Посадка: {new Date(plant.plantingDate).toLocaleDateString('ru-RU')}
             </Text>
@@ -190,7 +190,7 @@ export const PlantCard: React.FC<PlantCardProps> = ({
                 Прорастание: {new Date(plant.germinationDate).toLocaleDateString('ru-RU')}
               </Text>
             )}
-          </View>
+          </View> */}
         </TouchableOpacity>
       </Link>
 
@@ -207,7 +207,7 @@ export const PlantCard: React.FC<PlantCardProps> = ({
       <View style={styles.actions}>
         <Link href={`/plant/calendar/${plant.id}`} asChild>
             <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="calendar" size={20} color="#007AFF" />
+            <Ionicons name="calendar" size={20} color="#32CD32" />
             </TouchableOpacity>
         </Link>
         {onDelete && (

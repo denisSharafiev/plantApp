@@ -53,7 +53,7 @@ export const LunarCalendar: React.FC<LunarCalendarProps> = ({ onDayPress }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#32CD32" />
         <Text style={styles.loadingText}>Загрузка лунного календаря...</Text>
       </View>
     );
@@ -75,7 +75,7 @@ export const LunarCalendar: React.FC<LunarCalendarProps> = ({ onDayPress }) => {
       {/* Заголовок с навигацией */}
       <View style={styles.header}>
         <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
-          <Ionicons name="chevron-back" size={24} color="#007AFF" />
+          <Ionicons name="chevron-back" size={24} color="#32CD32" />
         </TouchableOpacity>
         
         <Text style={styles.monthTitle}>
@@ -83,7 +83,7 @@ export const LunarCalendar: React.FC<LunarCalendarProps> = ({ onDayPress }) => {
         </Text>
         
         <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
-          <Ionicons name="chevron-forward" size={24} color="#007AFF" />
+          <Ionicons name="chevron-forward" size={24} color="#32CD32" />
         </TouchableOpacity>
       </View>
 
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#32CD32',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
