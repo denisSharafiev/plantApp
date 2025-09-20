@@ -1,7 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import { eachDayOfInterval, endOfMonth, format, isSameDay, startOfMonth } from 'date-fns';
 import React, { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { PlantEvent, plantEventsService } from '../services/plantEventsService';
 import { WateringService } from '../services/wateringService';
 import { Plant } from '../types/plant';
@@ -63,36 +62,56 @@ export const PlantCalendar: React.FC<PlantCalendarProps> = ({
 
   if (!isVisible) return null;
 
-  return (
-    <Modal visible={isVisible} animationType="slide" transparent={true}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.title}>Календарь: {plant.name}</Text>
+  // return (
+  //   <Modal visible={isVisible} animationType="slide" transparent={true}>
+  //     <View style={styles.modalContainer}>
+  //       <View style={styles.modalContent}>
+  //         <Text style={styles.title}>Календарь: {plant.name}</Text>
           
-          <ScrollView>
-            <Text style={styles.subtitle}>График полива: каждые {WateringService.getIntervalDays(plant.wateringSchedule)} дней</Text>
+  //         <ScrollView>
+  //           <Text style={styles.subtitle}>График полива: каждые {WateringService.getIntervalDays(plant.wateringSchedule)} дней</Text>
             
-            {/* Здесь будет сетка календаря */}
-            <View style={styles.calendarGrid}>
-              {eachDayOfInterval({
-                start: startOfMonth(currentDate),
-                end: endOfMonth(currentDate),
-              }).map(renderDay)}
-            </View>
+  //           {/* Здесь будет сетка календаря */}
+  //           <View style={styles.calendarGrid}>
+  //             {eachDayOfInterval({
+  //               start: startOfMonth(currentDate),
+  //               end: endOfMonth(currentDate),
+  //             }).map(renderDay)}
+  //           </View>
 
-            {/* Кнопка добавления события */}
-            <TouchableOpacity style={styles.addEventButton}>
-              <Ionicons name="add" size={20} color="white" />
-              <Text style={styles.addEventText}>Добавить событие</Text>
-            </TouchableOpacity>
-          </ScrollView>
+  //           {/* Кнопка добавления события */}
+  //           <TouchableOpacity style={styles.addEventButton}>
+  //             <Ionicons name="add" size={20} color="white" />
+  //             <Text style={styles.addEventText}>Добавить событие</Text>
+  //           </TouchableOpacity>
+  //         </ScrollView>
 
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Закрыть</Text>
-          </TouchableOpacity>
-        </View>
+  //         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+  //           <Text style={styles.closeButtonText}>Закрыть</Text>
+  //         </TouchableOpacity>
+  //       </View>
+  //     </View>
+  //   </Modal>
+  // );
+
+    return (
+    <View style={styles.calendarContainer}>
+      <Text style={styles.subtitle}>График полива: каждые {WateringService.getIntervalDays(plant.wateringSchedule)} дней</Text>
+      
+      {/* Здесь будет сетка календаря */}
+      <View style={styles.calendarGrid}>
+        {eachDayOfInterval({
+          start: startOfMonth(currentDate),
+          end: endOfMonth(currentDate),
+        }).map(renderDay)}
       </View>
-    </Modal>
+
+      {/* Кнопка добавления события */}
+      {/* <TouchableOpacity style={styles.addEventButton}>
+        <Ionicons name="add" size={20} color="white" />
+        <Text style={styles.addEventText}>Добавить событие</Text>
+      </TouchableOpacity> */}
+    </View>
   );
 };
 
@@ -180,5 +199,8 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: 'white',
     fontWeight: '600',
+  },
+  calendarContainer: {
+    padding: 16,
   },
 });

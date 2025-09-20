@@ -39,6 +39,7 @@ export default function AddScreen() {
     name: '',
     species: '',
     seedBank: '',
+    method: '',
     price: '',
     expectedDays: '',
     wateringSchedule: '2days',
@@ -70,7 +71,7 @@ export default function AddScreen() {
         ...prev,
         photos: [...prev.photos, savedUri],
       }));
-    } catch (error) {
+    } catch {
       Alert.alert('Ошибка', 'Не удалось сохранить фото');
     }
   };
@@ -105,6 +106,7 @@ export default function AddScreen() {
       name: '',
       species: '',
       seedBank: '',
+      method:'',
       price: '',
       expectedDays: '',
       wateringSchedule: '7days',
@@ -129,6 +131,7 @@ export default function AddScreen() {
         species: formData.species.trim(),
         seedBank: formData.seedBank?.trim(),
         price: formData.price ? Number(formData.price) : undefined,
+        method: formData.method?.trim(),
         expectedDays: Number(formData.expectedDays),
         wateringSchedule: formData.wateringSchedule,
         currentStage: formData.stage, // Используем currentStage вместо stage
@@ -152,6 +155,7 @@ export default function AddScreen() {
         species: '',
         seedBank: '',
         price: '',
+        method: '',
         expectedDays: '',
         wateringSchedule: '7days',
         stage: 'прорастание',
@@ -218,6 +222,14 @@ export default function AddScreen() {
             onChangeText={(text) => setFormData(prev => ({ ...prev, price: text }))}
             placeholder="Например, 500"
             keyboardType="numeric"
+          />
+
+          <Text style={styles.label}>Метод выращивания</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.method}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, method: text }))}
+            placeholder="Например, субстрат, аутдор..."
           />
 
           <Text style={styles.label}>Заявленный срок (дни) *</Text>

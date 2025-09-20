@@ -182,7 +182,7 @@ export default function PlantCalendarScreen() {
 
       {/* Legend */}
       <View style={styles.legend}>
-        <Text style={styles.legendTitle}>Легенда:</Text>
+        <Text style={styles.legendTitle}>Цвета:</Text>
         <View style={styles.legendItems}>
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: '#007AFF' }]} />
@@ -195,6 +195,18 @@ export default function PlantCalendarScreen() {
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: '#FF9500' }]} />
             <Text style={styles.legendText}>Обрезка</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendColor, { backgroundColor: '#5856D6' }]} />
+            <Text style={styles.legendText}>Пересадка</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendColor, { backgroundColor: '#FF2D55' }]} />
+            <Text style={styles.legendText}>Сбор урожая</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendColor, { backgroundColor: '#AF52DE' }]} />
+            <Text style={styles.legendText}>Другое</Text>
           </View>
         </View>
       </View>
@@ -323,11 +335,14 @@ const styles = StyleSheet.create({
   },
   legendItems: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '48%', // Почти половина ширины с небольшим отступом
+    marginBottom: 12,
   },
   legendColor: {
     width: 12,
@@ -340,7 +355,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   addButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#32CD32',
     margin: 16,
     padding: 16,
     borderRadius: 12,

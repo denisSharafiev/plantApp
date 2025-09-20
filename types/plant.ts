@@ -13,6 +13,7 @@ export interface Plant {
   name: string;
   species: string;
   seedBank?: string;
+  method?: string;
   price?: number;
   wateringSchedule: WateringSchedule;
   expectedDays: number;
@@ -32,6 +33,7 @@ export interface Plant {
 export interface PlantFormData {
   name: string;
   species: string;
+  method?: string;
   expectedDays: string;
   stage: PlantStage;
   plantingDate: string;

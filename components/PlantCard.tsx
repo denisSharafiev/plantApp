@@ -136,16 +136,22 @@ export const PlantCard: React.FC<PlantCardProps> = ({
 
           {/* Дополнительная информация */}
           <View style={styles.additionalInfo}>
-            {plant.seedBank && (
-              <View style={styles.infoRow}>
-                <Ionicons name="business" size={12} color="#666" />
-                <Text style={styles.infoText}>{plant.seedBank}</Text>
-              </View>
-            )}
             {plant.price && (
               <View style={styles.infoRow}>
                 <Ionicons name="calendar-sharp" size={12} color="#666" />
                 <Text style={styles.infoText}>Дата посадки: {new Date(plant.plantingDate).toLocaleDateString('ru-RU')}</Text>
+              </View>
+            )}
+            {plant.seedBank && (
+              <View style={styles.infoRow}>
+                <Ionicons name="cart" size={12} color="#666" />
+                <Text style={styles.infoText}>{plant.seedBank}</Text>
+              </View>
+            )}
+            {plant.method && (
+              <View style={styles.infoRow}>
+                <Ionicons name="speedometer-sharp" size={12} color="#666" />
+                <Text style={styles.infoText}>{plant.method}</Text>
               </View>
             )}
           </View>

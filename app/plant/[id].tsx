@@ -21,6 +21,7 @@ import {
   updatePlantPhaseAtom
 } from '../../atoms/plantsAtom';
 import { CameraButton } from '../../components/CameraButton';
+import { PlantCalendar } from '../../components/PlantCalendar';
 import { PlantPhaseManager } from '../../components/PlantPhaseManager';
 import { fileStorage } from '../../services/fileStorage';
 // import { plantEventsService } from '../../services/plantEventsService';
@@ -39,6 +40,7 @@ export default function PlantDetailScreen() {
   const [, updatePlant] = useAtom(updatePlantAtom);
   const archivePlant = useSetAtom(archivePlantAtom);
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+  const [isCalendarExpanded, setIsCalendarExpanded] = useState(false); 
 
   const plant = plants.find(p => p.id === id);
   
@@ -179,16 +181,16 @@ export default function PlantDetailScreen() {
   };
 
   // Вспомогательная функция для цвета стадии
-  const getStageColor = (stage: PlantStage) => {
-    switch (stage) {
-      case 'прорастание': return '#FF9500';
-      case 'рассада': return '#34C759';
-      case 'вегетация': return '#5856D6';
-      case 'цветение': return '#FF2D55';
-      case 'урожай готов!': return '#AF52DE';
-      default: return '#8E8E93';
-    }
-  };
+  // const getStageColor = (stage: PlantStage) => {
+  //   switch (stage) {
+  //     case 'прорастание': return '#FF9500';
+  //     case 'рассада': return '#34C759';
+  //     case 'вегетация': return '#5856D6';
+  //     case 'цветение': return '#FF2D55';
+  //     case 'урожай готов!': return '#AF52DE';
+  //     default: return '#8E8E93';
+  //   }
+  // };
 
   // Добавляем функции для работы с фазами
   const handlePhaseChange = async (newStage: PlantStage, startDate: Date, notes?: string) => {
@@ -340,6 +342,10 @@ export default function PlantDetailScreen() {
         </Text>
       </View>
       <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Метод выращивания:</Text>
+        <Text style={styles.infoValue}>{plant.method}</Text>
+      </View>
+      <View style={styles.infoRow}>
         <Text style={styles.infoLabel}>Вид:</Text>
         <Text style={styles.infoValue}>{plant.species}</Text>
       </View>
@@ -365,6 +371,30 @@ export default function PlantDetailScreen() {
       <View style={styles.infoRow}>
         <Text style={styles.infoLabel}>Комментарий:</Text>
         <Text style={styles.infoValue}>{plant.notes}</Text>
+      </View>
+
+      {/* Календарь растения */}
+      <View style={styles.calendarSection}>
+        <TouchableOpacity 
+          style={styles.calendarHeader}
+          onPress={() => setIsCalendarExpanded(!isCalendarExpanded)}
+        >
+          <Text style={styles.sectionTitle}>Календарь</Text>
+          <Ionicons 
+            name={isCalendarExpanded ? "chevron-up" : "chevron-down"} 
+            size={24} 
+            color="#333" 
+          />
+        </TouchableOpacity>
+        
+        {isCalendarExpanded && (
+          <PlantCalendar 
+            plant={plant}
+            isVisible={true}
+            onClose={() => setIsCalendarExpanded(false)}
+            onAddEvent={() => {}} // Можно добавить обработчик добавления событий
+          />
+        )}
       </View>
 
       {/* Управление стадиями */}
@@ -459,8 +489,8 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    padding: 10,
   },
   infoLabel: {
     fontSize: 16,
@@ -621,4 +651,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 4,
   },
+  calendarSection: {
+    backgroundColor: 'white',
+    marginBottom: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#F8F9FA',
+  },
+  
 });
