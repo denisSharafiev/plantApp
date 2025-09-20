@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#34C759',
   },
   addEventButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#32CD32',
     padding: 16,
     borderRadius: 12,
     flexDirection: 'row',

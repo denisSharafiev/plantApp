@@ -132,7 +132,7 @@ export const PlantRatingModal: React.FC<PlantRatingModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.scrollContent}>
+          <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContentContainer}>
             {/* Категории рейтинга */}
             {ratingCategories.map(category => (
               <View key={category.key} style={styles.ratingCategory}>
@@ -214,12 +214,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   ratingCategory: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   categoryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   categoryLabel: {
     fontSize: 16,
@@ -237,10 +237,10 @@ const styles = StyleSheet.create({
   },
   starsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   starButton: {
-    padding: 4,
+    padding: 5,
   },
   overallRating: {
     backgroundColor: '#F8F9FA',
@@ -285,5 +285,8 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  scrollContentContainer: {
+    paddingBottom: 100, // Добавляем достаточно места для кнопок
   },
 });

@@ -21,7 +21,7 @@ export const NotesList: React.FC<NotesListProps> = ({ onEditNote, onViewNote, re
       setNotes(notesData.sort((a, b) => 
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       ));
-    } catch (error) {
+    } catch {
       Alert.alert('Ошибка', 'Не удалось загрузить заметки');
     } finally {
       setLoading(false);

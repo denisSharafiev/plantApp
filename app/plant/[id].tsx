@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAtom, useSetAtom } from 'jotai';
+import React, { useState } from 'react';
 import {
   Alert,
   Image,
@@ -25,6 +26,8 @@ import { fileStorage } from '../../services/fileStorage';
 // import { plantEventsService } from '../../services/plantEventsService';
 import { Plant, PlantPhase, PlantStage } from '../../types/plant';
 // import {WateringSchedule} from '../../types/plant';
+import { PlantRatingModal } from '../../components/PlantRatingModal';
+
 
 
 export default function PlantDetailScreen() {
@@ -35,6 +38,7 @@ export default function PlantDetailScreen() {
   const updatePhaseNotes = useSetAtom(updatePhaseNotesAtom);
   const [, updatePlant] = useAtom(updatePlantAtom);
   const archivePlant = useSetAtom(archivePlantAtom);
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
 
   const plant = plants.find(p => p.id === id);
   
@@ -51,9 +55,9 @@ export default function PlantDetailScreen() {
       await archivePlant(plant.id);
       Alert.alert('Успех', 'Растение перемещено в архив');
       router.back();
-    } catch (error) {
-      Alert.alert('Ошибка', 'Не удалось переместить в архив');
-    }
+      } catch {
+        Alert.alert('Ошибка', 'Не удалось переместить в архив');
+      }
   };
 
   const confirmArchive = () => {
@@ -212,12 +216,16 @@ export default function PlantDetailScreen() {
         });
       }
       
-      Alert.alert('Успех', 'Заметки сохранены');
+      Alert.alert('Успешно', 'Заметки сохранены');
     } catch (error) {
       console.error('Error updating phase:', error);
       Alert.alert('Ошибка', 'Не удалось сохранить заметки');
     }
   };
+
+    const handleRatingPress = () => {
+      setIsRatingModalVisible(true);
+    };
  
   return (
     <ScrollView style={styles.container}>
@@ -227,6 +235,22 @@ export default function PlantDetailScreen() {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.title}>{plant.name}</Text>
+          
+        {/* ОТОБРАЖЕНИЕ РЕЙТИНГА - ВСТАВЛЯЕМ ЗДЕСЬ */}
+        {plant.ratings && plant.ratings.overallRating > 0 && (
+          <View style={styles.ratingBadge}>
+            <Ionicons name="star" size={12} color="#FFD700" />
+            <Text style={styles.ratingText}>{plant.ratings.overallRating}</Text>
+          </View>
+        )}
+        {/* Кнопка рейтинга */}
+        <TouchableOpacity 
+          style={styles.ratingButton}
+          onPress={handleRatingPress}
+        >
+          <Ionicons name="star" size={16} color="#FFD700" />
+          <Text style={styles.ratingButtonText}>Оценить</Text>
+        </TouchableOpacity>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -300,7 +324,7 @@ export default function PlantDetailScreen() {
 
 
       {/* Информация */}
-      <View style={styles.infoRow}>
+      {/* <View style={styles.infoRow}>
         <Text style={styles.infoLabel}>Стадия:</Text>
         <View style={[styles.stageBadge, { backgroundColor: getStageColor(plant.currentStage) + '20' }]}>
           <View style={[styles.stageDot, { backgroundColor: getStageColor(plant.currentStage) }]} />
@@ -308,6 +332,39 @@ export default function PlantDetailScreen() {
             {plant.currentStage}
           </Text>
         </View>
+      </View> */}
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Дата посадки:</Text>
+        <Text style={styles.infoValue}>
+          {new Date(plant.plantingDate).toLocaleDateString('ru-RU')}
+        </Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Вид:</Text>
+        <Text style={styles.infoValue}>{plant.species}</Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Заявленный срок:</Text>
+        <Text style={styles.infoValue}>{plant.expectedDays} дней</Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Производитель:</Text>
+        <Text style={styles.infoValue}>{plant.seedBank}</Text>
+      </View>
+
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Цена:</Text>
+        <Text style={styles.infoValue}>{plant.price} руб.</Text>
+      </View>
+
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Текущий график полива:</Text>
+        <Text style={styles.infoValue}>Каждые {plant.wateringSchedule}</Text>
+      </View>
+
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Комментарий:</Text>
+        <Text style={styles.infoValue}>{plant.notes}</Text>
       </View>
 
       {/* Управление стадиями */}
@@ -325,6 +382,13 @@ export default function PlantDetailScreen() {
           <Text style={styles.archiveButtonText}>Переместить в архив</Text>
         </TouchableOpacity>
       )}
+
+      {/* Модальное окно рейтинга */}
+      <PlantRatingModal
+        visible={isRatingModalVisible}
+        onClose={() => setIsRatingModalVisible(false)}
+        plant={plant}
+      />
     </ScrollView>
   );
 }
@@ -360,6 +424,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 16,
     flex: 1,
+    maxWidth:150
   },
   headerSpacer: {
     width: 32,
@@ -516,5 +581,44 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#666',
     fontSize: 16,
+  },
+  ratingButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9C4',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FFEB3B',
+  },
+  ratingButtonText: {
+    fontSize: 12,
+    color: '#F57C00',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  ratingBadge: {
+    position: 'absolute',
+    top: 19,
+    right: 130,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9C4',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFEB3B',
+    marginLeft: 8,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#F57C00',
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });

@@ -79,6 +79,7 @@ export const PlantCard: React.FC<PlantCardProps> = ({
   onUnarchive,
 }) => {
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+  
 
   // Рассчитываем количество дней с посадки
   const getDaysSincePlanting = () => {
@@ -102,10 +103,6 @@ export const PlantCard: React.FC<PlantCardProps> = ({
     }
   };
 
-  const handleRatingPress = () => {
-    setIsRatingModalVisible(true);
-  };
-
   return (
     <View style={styles.card}>
       <Link href={`/plant/${plant.id}`} asChild>
@@ -123,7 +120,7 @@ export const PlantCard: React.FC<PlantCardProps> = ({
               <View style={styles.nameContainer}>
                 <Text style={styles.name}>{plant.name}</Text>
                 {/* ОТОБРАЖЕНИЕ РЕЙТИНГА - ВСТАВЛЯЕМ ЗДЕСЬ */}
-                {plant.ratings?.overallRating > 0 && (
+                {plant.ratings && plant.ratings.overallRating > 0 && (
                   <View style={styles.ratingBadge}>
                     <Ionicons name="star" size={12} color="#FFD700" />
                     <Text style={styles.ratingText}>{plant.ratings.overallRating}</Text>
@@ -133,7 +130,7 @@ export const PlantCard: React.FC<PlantCardProps> = ({
               
               <NextEvent plantId={plant.id} />
               {/* График полива */}
-              <WateringInfo schedule={plant.wateringSchedule} />
+              <WateringInfo schedule={plant.wateringSchedule}/>
             </View>
           </View>
 
@@ -147,8 +144,8 @@ export const PlantCard: React.FC<PlantCardProps> = ({
             )}
             {plant.price && (
               <View style={styles.infoRow}>
-                <Ionicons name="pricetag" size={12} color="#666" />
-                <Text style={styles.infoText}>{plant.price} руб</Text>
+                <Ionicons name="calendar-sharp" size={12} color="#666" />
+                <Text style={styles.infoText}>Дата посадки: {new Date(plant.plantingDate).toLocaleDateString('ru-RU')}</Text>
               </View>
             )}
           </View>
@@ -195,13 +192,13 @@ export const PlantCard: React.FC<PlantCardProps> = ({
       </Link>
 
       {/* Кнопка рейтинга */}
-      <TouchableOpacity 
+      {/* <TouchableOpacity 
         style={styles.ratingButton}
         onPress={handleRatingPress}
       >
         <Ionicons name="star" size={16} color="#FFD700" />
         <Text style={styles.ratingButtonText}>Оценить</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* Кнопки действий */}
       <View style={styles.actions}>
@@ -289,11 +286,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 6,
+    justifyContent: 'space-between'
   },
   name: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
+    maxWidth: 150
   },
   ratingBadge: {
     flexDirection: 'row',

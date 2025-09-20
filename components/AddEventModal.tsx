@@ -98,7 +98,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContentContainer}>
             <Text style={styles.label}>Тип события *</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typesScroll}>
               {eventTypes.map(eventType => (
@@ -332,5 +332,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
     borderColor: '#E9ECEF',
     zIndex: 3000,
+  },
+  scrollContentContainer: {
+    paddingBottom: 40, // Добавляем отступ вниз
   },
 });

@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Plant, WateringSchedule } from '../types/plant';
 import { NotificationService } from './notificationService';
 import { WateringEvent, WateringService } from './wateringService';

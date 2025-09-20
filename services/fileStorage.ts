@@ -1,5 +1,5 @@
 import * as Crypto from 'expo-crypto';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Plant } from '../types/plant';
 
 const PLANTS_FILE = `${FileSystem.documentDirectory}plants.json`;

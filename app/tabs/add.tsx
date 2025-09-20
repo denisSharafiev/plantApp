@@ -312,7 +312,7 @@ export default function AddScreen() {
           )}
 
           {/* Заметки */}
-          <Text style={styles.label}>Заметки</Text>
+          <Text style={styles.label}>Комментарий</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
             value={formData.notes}
