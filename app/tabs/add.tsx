@@ -126,6 +126,7 @@ export default function AddScreen() {
     setLoading(true);
 
     try {
+      // В handleSubmit исправляем создание растения
       const newPlant = await addPlant({
         name: formData.name.trim(),
         species: formData.species.trim(),
@@ -134,7 +135,7 @@ export default function AddScreen() {
         method: formData.method?.trim(),
         expectedDays: Number(formData.expectedDays),
         wateringSchedule: formData.wateringSchedule,
-        currentStage: formData.stage, // Используем currentStage вместо stage
+        currentStage: formData.stage, // Используем currentStage
         phases: [{
           stage: formData.stage,
           startDate: formData.plantingDate

@@ -1,6 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Plant } from '../types/plant';
+import { plantEventsService } from './plantEventsService';
 
 const PLANTS_FILE = `${FileSystem.documentDirectory}plants.json`;
 const PHOTOS_DIR = `${FileSystem.documentDirectory}plants_photos/`;
@@ -69,6 +70,8 @@ class FileStorage {
       console.error('Error deleting plant photos:', error);
     }
   }
+
+  
 
   // Основные методы работы с растениями (getPlants, addPlant, updatePlant, deletePlant)
   // остаются аналогичными предыдущей версии, но с обновленной структурой Plant
@@ -140,6 +143,8 @@ class FileStorage {
     }
   }
 
+
+  // В методе deletePlant добавляем удаление событий растения
   async deletePlant(id: string): Promise<boolean> {
     try {
       const plants = await this.getPlants();
@@ -150,6 +155,9 @@ class FileStorage {
         if (plantToDelete.photos && plantToDelete.photos.length > 0) {
           await this.deletePlantPhotos(plantToDelete.photos);
         }
+        
+        // Удаляем события растения - ВАЖНО!
+        await plantEventsService.deletePlantEvents(id);
       }
 
       const filteredPlants = plants.filter(plant => plant.id !== id);
@@ -166,7 +174,7 @@ class FileStorage {
     try {
       const fileInfo = await FileSystem.getInfoAsync(uri);
       return fileInfo.exists ?? false;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

@@ -68,39 +68,9 @@ export const PlantPhaseManager: React.FC<PlantPhaseManagerProps> = ({
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Управление фазами роста</Text>
-      
-      {/* Текущая фаза */}
-      <View style={styles.currentPhase}>
-        <Text style={styles.currentPhaseLabel}>Текущая фаза:</Text>
-        <View style={[styles.stageBadge, { backgroundColor: getStageColor(currentStage) + '20' }]}>
-          <View style={[styles.stageDot, { backgroundColor: getStageColor(currentStage) }]} />
-          <Text style={[styles.stageText, { color: getStageColor(currentStage) }]}>
-            {currentStage}
-          </Text>
-        </View>
-      </View>
-
-      {/* Кнопки для перехода на следующую фазу */}
-      {getNextStages().length > 0 && (
-        <View style={styles.nextStages}>
-          <Text style={styles.nextStagesLabel}>Перейти к следующей фазе:</Text>
-          {getNextStages().map((stage) => (
-            <TouchableOpacity
-              key={stage}
-              style={[styles.stageButton, { borderColor: getStageColor(stage) }]}
-              onPress={() => handleStageChange(stage)}
-            >
-              <Text style={[styles.stageButtonText, { color: getStageColor(stage) }]}>
-                {stage}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
       {/* История фаз */}
       <View style={styles.phasesHistory}>
-        <Text style={styles.historyTitle}>История фаз:</Text>
+        <Text style={styles.historyTitle}>Текущая фаза</Text>
         {phases.map((phase, index) => (
           <View key={index} style={styles.phaseItem}>
             <TouchableOpacity
@@ -183,6 +153,34 @@ export const PlantPhaseManager: React.FC<PlantPhaseManagerProps> = ({
           </View>
         ))}
       </View>
+      {/* Текущая фаза */}
+      {/* <View style={styles.currentPhase}>
+        <Text style={styles.currentPhaseLabel}>Текущая фаза:</Text>
+        <View style={[styles.stageBadge, { backgroundColor: getStageColor(currentStage) + '20' }]}>
+          <View style={[styles.stageDot, { backgroundColor: getStageColor(currentStage) }]} />
+          <Text style={[styles.stageText, { color: getStageColor(currentStage) }]}>
+            {currentStage}
+          </Text>
+        </View>
+      </View> */}
+
+      {/* Кнопки для перехода на следующую фазу */}
+      {getNextStages().length > 0 && (
+        <View style={styles.nextStages}>
+          <Text style={styles.nextStagesLabel}>Перейти к следующей фазе:</Text>
+          {getNextStages().map((stage) => (
+            <TouchableOpacity
+              key={stage}
+              style={[styles.stageButton, { borderColor: getStageColor(stage) }]}
+              onPress={() => handleStageChange(stage)}
+            >
+              <Text style={[styles.stageButtonText, { color: getStageColor(stage) }]}>
+                {stage}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
     </View>
   );
 };

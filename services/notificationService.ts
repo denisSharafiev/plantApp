@@ -2,13 +2,14 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { PlantEvent } from './plantEventsService';
 
-// Минимальная конфигурация
+// Правильная конфигурация для новой версии Expo Notifications
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
-  } as any),
+    shouldShowList: true, // Добавляем обязательное свойство
+  }),
 });
 
 export class NotificationService {
@@ -37,9 +38,14 @@ export class NotificationService {
       if (!hasPermission) return null;
 
       const eventDate = new Date(event.date);
-      const notificationTime = eventDate.getTime() - remindBeforeMinutes * 60 * 1000;
+      
+      // Проверяем, что дата события в будущем
+      if (eventDate <= new Date()) return null;
 
-      if (notificationTime < Date.now()) return null;
+      const notificationTime = eventDate.getTime() - remindBeforeMinutes * 60 * 1000;
+      
+      // Проверяем, что время уведомления в будущем
+      if (notificationTime <= Date.now()) return null;
 
       return await Notifications.scheduleNotificationAsync({
         content: {

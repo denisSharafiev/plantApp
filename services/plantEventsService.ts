@@ -185,6 +185,17 @@ class PlantEventsService {
   // Обновление графика полива растения
   async updateWateringSchedule(plantId: string, newSchedule: WateringSchedule, plantingDate: string): Promise<void> {
     // Удаляем старые события полива для этого растения
+    const eventsToDelete = this.events.filter(event => 
+      event.plantId === plantId && event.type === 'watering'
+    );
+    
+    // Отменяем уведомления для удаляемых событий
+    for (const event of eventsToDelete) {
+      if (event.notificationId) {
+        await NotificationService.cancelNotification(event.notificationId);
+      }
+    }
+
     this.events = this.events.filter(event => 
       !(event.plantId === plantId && event.type === 'watering')
     );
@@ -203,7 +214,7 @@ class PlantEventsService {
       date: wateringEvent.date.toISOString(),
       type: 'watering' as const,
       title: 'Полив',
-      description: `Автоматическое событие полива по графику`,
+      description: `Автоматическое событие полива по графику ${newSchedule}`,
       completed: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -214,7 +225,50 @@ class PlantEventsService {
     await this.saveEvents();
   }
 
+  // Добавляем метод для обновления уведомлений при изменении даты события
+  async updateEventDate(eventId: string, newDate: string): Promise<PlantEvent | null> {
+    const eventIndex = this.events.findIndex(e => e.id === eventId);
+    
+    if (eventIndex === -1) return null;
+
+    const event = this.events[eventIndex];
+    
+    // Отменяем старое уведомление
+    if (event.notificationId) {
+      await NotificationService.cancelNotification(event.notificationId);
+    }
+
+    // Создаем новое уведомление, если было напоминание
+    let notificationId: string | undefined;
+    if (event.reminderMinutes !== undefined && event.reminderMinutes > 0) {
+      try {
+        const newNotificationId = await NotificationService.scheduleEventNotification(
+          { ...event, date: newDate },
+          event.reminderMinutes
+        );
+        if (newNotificationId) {
+          notificationId = newNotificationId;
+        }
+      } catch (error) {
+        console.error('Error scheduling notification:', error);
+      }
+    }
+
+    const updatedEvent = {
+      ...event,
+      date: newDate,
+      notificationId,
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.events[eventIndex] = updatedEvent;
+    await this.saveEvents();
+    
+    return updatedEvent;
+  }
+
   // Создание событий полива при добавлении растения
+  // Исправляем метод createWateringEventsForNewPlant
   async createWateringEventsForNewPlant(plant: Plant): Promise<void> {
     const wateringEvents = WateringService.calculateNextWateringDates(
       new Date(plant.plantingDate),
@@ -222,13 +276,13 @@ class PlantEventsService {
       90
     );
 
-    const plantEvents: PlantEvent[] = wateringEvents.map((event, index) => ({
+    const plantEvents: PlantEvent[] = wateringEvents.map((wateringEvent, index) => ({
       id: `watering_${plant.id}_${Date.now()}_${index}`,
       plantId: plant.id,
-      date: event.date.toISOString(),
+      date: wateringEvent.date.toISOString(),
       type: 'watering',
       title: 'Полив',
-      description: `Автоматическое событие полива`,
+      description: `Автоматическое событие полива по графику ${plant.wateringSchedule}`,
       completed: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

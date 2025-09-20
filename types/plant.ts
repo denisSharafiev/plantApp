@@ -21,6 +21,9 @@ export interface Plant {
   phases: PlantPhase[]; // История всех фаз
   plantingDate: string;
   notes?: string;
+  repeatInterval?: number; // для custom повторов
+  endRepeat?: string; // дата окончания повторов
+  notificationId?: string; // ID уведомления в системе
   photos?: string[];
   photo?: string;
   avatarPhoto?: string;
